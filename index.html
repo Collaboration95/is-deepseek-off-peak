@@ -13,7 +13,11 @@
   :root{
     --paper:#F7F6F2; --card:#FFFFFF; --ink:#141310; --ink-2:#46433A; --muted:#8B867A;
     --line:#E4E1D8; --hair:#EFEBE2; --well:#F4F2EC;
-    --accent:#FFD64D; --accent-deep:#D9A303; --accent-line:#F1DA93; --accent-halo:rgba(255,214,77,.20);
+    /* Accent family, all derived from #1313BB. The picker sits on --accent, so its label
+       and caret are white: white on #1313BB is 11.4:1, comfortably past WCAG AA. */
+    --accent:#1313BB; --accent-deep:#0C0C82; --accent-line:#CFCFF2; --accent-halo:rgba(19,19,187,.13);
+    --accent-wash:rgba(19,19,187,.09); --accent-shadow:rgba(19,19,187,.32);
+    --accent-glow:rgba(19,19,187,.70); --accent-glow-strong:rgba(19,19,187,.95);
     --off:#0C7A57; --off-soft:#E9F6EF; --off-line:#C6E6D7; --off-fill:#A9DEC4;
     --peak:#9A5408; --peak-soft:#FDF1DE; --peak-line:#F0D6AC; --peak-fill:#F3D199;
     --font-display:"Inter Tight","Inter",-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -56,7 +60,7 @@
     content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
     background:
       radial-gradient(720px 380px at 50% -6%,#FFFFFF 0%,rgba(255,255,255,0) 74%),
-      radial-gradient(560px 320px at 50% 4%,rgba(255,214,77,.16),rgba(255,214,77,0) 76%);
+      radial-gradient(560px 320px at 50% 4%,var(--accent-wash),rgba(19,19,187,0) 76%);
   }
 
   .page{
@@ -85,16 +89,16 @@
     letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
   #tzSelect{
     -webkit-appearance:none;appearance:none;cursor:pointer;
-    background:var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23141310' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 14px center;
+    background:var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23FFFFFF' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 14px center;
     background-size:12px 9px;
-    color:#17140B;border:1px solid var(--accent-deep);border-radius:12px;
+    color:#FFFFFF;border:1px solid var(--accent-deep);border-radius:12px;
     padding:clamp(9px,1.45vh,13px) 44px clamp(9px,1.45vh,13px) 18px;
     font-family:var(--font-mono);font-size:15.5px;font-weight:700;line-height:1;
-    box-shadow:0 1px 0 rgba(20,19,16,.05),0 12px 22px -14px rgba(217,163,3,.9);
+    box-shadow:0 1px 0 rgba(20,19,16,.05),0 12px 22px -14px var(--accent-glow);
     transition:box-shadow .14s ease;
   }
-  #tzSelect:hover{box-shadow:0 1px 0 rgba(20,19,16,.05),0 16px 28px -14px rgba(217,163,3,1)}
-  #tzSelect:focus-visible{outline:3px solid rgba(217,163,3,.45);outline-offset:2px}
+  #tzSelect:hover{box-shadow:0 1px 0 rgba(20,19,16,.05),0 16px 28px -14px var(--accent-glow-strong)}
+  #tzSelect:focus-visible{outline:3px solid rgba(19,19,187,.45);outline-offset:2px}
   #tzSelect option,#tzSelect optgroup{background:#FFFFFF;color:var(--ink);font-family:var(--font-mono);font-size:15.5px;font-weight:500}
 
   .clockline{margin:0;display:flex;align-items:baseline;gap:10px;font-family:var(--font-mono);
@@ -124,7 +128,7 @@
 
   .board{background:var(--card);border:1px solid var(--accent-line);border-radius:var(--radius);
     padding:var(--pad-card);
-    box-shadow:0 0 0 6px var(--accent-halo),0 22px 40px -30px rgba(196,156,20,.55)}
+    box-shadow:0 0 0 6px var(--accent-halo),0 22px 40px -30px var(--accent-shadow)}
   .board-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
   h2{margin:0;font-family:var(--font-mono);font-size:12.5px;font-weight:600;line-height:1.4;
     letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
@@ -192,7 +196,7 @@
     #scheduleNote{display:none}
     .main{grid-template-columns:1fr;background:var(--card);border:1px solid var(--accent-line);
       border-radius:var(--radius);padding:var(--pad-card);
-      box-shadow:0 0 0 6px var(--accent-halo),0 22px 40px -30px rgba(196,156,20,.55)}
+      box-shadow:0 0 0 6px var(--accent-halo),0 22px 40px -30px var(--accent-shadow)}
     .count,.board{background:none;border:0;border-radius:0;box-shadow:none;padding:0}
     .count{padding-bottom:var(--gap-y);border-bottom:1px solid var(--hair);margin-bottom:var(--gap-y)}
     ul#nextList li{font-size:13.5px;padding:var(--row-y) 11px}
