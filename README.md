@@ -2,6 +2,8 @@
 
 A single page that shows whether DeepSeek API pricing is off-peak right now, with a live countdown to the next switch.
 
+Check it [out](https://collaboration95.github.io/is-deepseek-off-peak/)
+
 Off-peak is 50% off peak rates. Times follow the timezone picker, which starts at UTC+8; UTC is shown alongside.
 
 ## Run it
