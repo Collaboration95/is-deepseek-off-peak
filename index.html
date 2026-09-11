@@ -4,128 +4,204 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Is DeepSeek off-peak right now? (UTC+8)</title>
-<meta name="description" content="Live DeepSeek off-peak pricing status in UTC+8 with a countdown to the next switch. Off-peak is 50% off peak rates.">
+<meta name="description" id="metaDesc" content="Live DeepSeek off-peak pricing status in UTC+8 with a countdown to the next switch. Off-peak is 50% off peak rates.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Is DeepSeek off-peak right now?">
+<meta property="og:description" content="Live DeepSeek off-peak pricing status with a countdown to the next switch. Off-peak is 50% off peak rates.">
+<meta name="twitter:card" content="summary">
 <style>
   :root{
-    --bg:#070a0f; --card:#0e141c; --line:#1d2734; --ink:#e8eff8; --muted:#8da0b8;
-    --off:#31cf8b; --peak:#f3a63d;
+    --paper:#F7F6F2; --card:#FFFFFF; --ink:#141310; --ink-2:#46433A; --muted:#8B867A;
+    --line:#E4E1D8; --hair:#EFEBE2; --well:#F4F2EC;
+    --accent:#FFD64D; --accent-deep:#D9A303; --accent-line:#F1DA93; --accent-halo:rgba(255,214,77,.20);
+    --off:#0C7A57; --off-soft:#E9F6EF; --off-line:#C6E6D7; --off-fill:#A9DEC4;
+    --peak:#9A5408; --peak-soft:#FDF1DE; --peak-line:#F0D6AC; --peak-fill:#F3D199;
+    --font-display:"Inter Tight","Inter",-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --font-mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,"JetBrains Mono","Roboto Mono",Consolas,monospace;
+    --wrap:768px;
   }
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
   body{
-    margin:0;min-height:100vh;padding:28px 18px;
-    background:radial-gradient(900px 480px at 50% -15%, #101b28 0%, transparent 70%), var(--bg);
-    color:var(--ink);
-    font:16px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    display:flex;align-items:center;justify-content:center;
+    margin:0;min-height:100vh;background:var(--paper);color:var(--ink);
+    font:400 16px/1.55 var(--font-display);
+    -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
   }
-  body[data-state="off"]{--accent:var(--off);--accent-soft:rgba(49,207,139,.12);--accent-line:rgba(49,207,139,.34)}
-  body[data-state="peak"]{--accent:var(--peak);--accent-soft:rgba(243,166,61,.12);--accent-line:rgba(243,166,61,.34)}
+  body[data-state="off"]{--state:var(--off);--state-soft:var(--off-soft);--state-line:var(--off-line)}
+  body[data-state="peak"]{--state:var(--peak);--state-soft:var(--peak-soft);--state-line:var(--peak-line)}
 
-  .card{
-    width:min(620px,100%);background:var(--card);border:1px solid var(--line);border-radius:22px;
-    padding:26px 26px 20px;box-shadow:0 24px 70px rgba(0,0,0,.5);
+  /* Hairline engineering paper that fades past the fold, with a warm wash behind the headline. */
+  body::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:
+      linear-gradient(to right,rgba(20,19,16,.05) 1px,transparent 1px),
+      linear-gradient(to bottom,rgba(20,19,16,.05) 1px,transparent 1px);
+    background-size:46px 46px;
+    -webkit-mask-image:radial-gradient(1150px 680px at 50% -2%,#000 0%,rgba(0,0,0,.55) 54%,transparent 88%);
+    mask-image:radial-gradient(1150px 680px at 50% -2%,#000 0%,rgba(0,0,0,.55) 54%,transparent 88%);
   }
-  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:20px}
-  h1{margin:0;font-size:16px;font-weight:700;letter-spacing:-.01em}
-  .sub{margin:4px 0 0;color:var(--muted);font-size:13px;max-width:34ch}
-  .clocks{text-align:right;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1.5}
-  .clocks b{display:block;color:var(--ink);font-size:14px;font-weight:600}
-  .clocks .pri b{font-size:17px;color:var(--accent)}
+  body::after{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(720px 380px at 50% -6%,#FFFFFF 0%,rgba(255,255,255,0) 74%),
+      radial-gradient(560px 320px at 50% 5%,rgba(255,214,77,.18),rgba(255,214,77,0) 76%);
+  }
 
-  .status{background:linear-gradient(180deg,var(--accent-soft),transparent 78%);border:1px solid var(--line);
-    border-radius:16px;padding:18px}
-  .badge{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;
-    background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent);
-    font-size:12.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase}
-  .badge::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
-  .headline{margin:14px 0 0;font-size:15px;color:var(--ink)}
-  .countdown{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:2px}
-  .cd-label{color:var(--muted);font-size:14px}
-  .cd-value{font-size:clamp(34px,9vw,46px);font-weight:750;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-  .cd-secs{color:var(--muted);font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
-  .switchline{margin:2px 0 0;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
-  .bar{height:6px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden;margin-top:16px}
-  .bar i{display:block;height:100%;width:0;border-radius:999px;background:var(--accent);transition:width .25s linear}
-  .barlabel{margin:8px 0 0;color:var(--muted);font-size:12px}
+  .page{position:relative;z-index:1;width:min(var(--wrap),100%);margin:0 auto;
+    padding:clamp(44px,7.5vw,92px) 22px clamp(40px,6vw,64px)}
 
-  h2{margin:22px 0 10px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-  .tz{text-transform:none;letter-spacing:0;font-weight:600}
+  .hero{text-align:center;display:flex;flex-direction:column;align-items:center}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;margin:0 0 20px;
+    font:600 11.5px/1 var(--font-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--state);box-shadow:0 0 0 4px var(--state-soft)}
+  /* 20ch holds "Off-peak right now." on one line at full size, so flipping to the
+     shorter peak headline does not reflow the hero. */
+  .display{margin:0;max-width:20ch;font:800 clamp(35px,7.2vw,58px)/0.99 var(--font-display);
+    letter-spacing:-.035em;color:var(--ink)}
+  .lede{margin:20px 0 0;max-width:54ch;font:400 14.5px/1.65 var(--font-mono);color:var(--ink-2)}
+  .lede span{color:var(--ink);font-weight:600}
 
-  .timeline .strip{position:relative;height:16px;border-radius:8px;background:#0a0f16;border:1px solid var(--line);overflow:hidden}
+  .picker{margin:30px 0 0;display:flex;flex-direction:column;align-items:center;gap:10px}
+  .micro{margin:0;font:600 11px/1.4 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  #tzSelect{
+    -webkit-appearance:none;appearance:none;cursor:pointer;
+    background:var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23141310' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 15px center;
+    background-size:11px 8px;
+    color:#17140B;border:1px solid var(--accent-deep);border-radius:12px;
+    padding:12px 42px 12px 18px;
+    font:700 14.5px/1 var(--font-mono);letter-spacing:.01em;
+    box-shadow:0 1px 0 rgba(20,19,16,.05),0 14px 26px -14px rgba(217,163,3,.9);
+    transition:box-shadow .14s ease;
+  }
+  #tzSelect:hover{box-shadow:0 1px 0 rgba(20,19,16,.05),0 18px 32px -14px rgba(217,163,3,1)}
+  #tzSelect:focus-visible{outline:3px solid rgba(217,163,3,.45);outline-offset:2px}
+  #tzSelect option,#tzSelect optgroup{background:#FFFFFF;color:var(--ink);font:500 14px/1.6 var(--font-mono)}
+
+  .clockline{margin:26px 0 0;display:flex;align-items:baseline;justify-content:center;gap:12px;
+    font:500 12.5px/1 var(--font-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+  .clockline b{font:600 15px/1 var(--font-mono);color:var(--ink-2)}
+  .clockline .pri b{color:var(--ink)}
+  .unit{margin-left:6px}
+
+  .count{margin:clamp(44px,7vw,64px) 0 0;text-align:center}
+  .cd{display:flex;align-items:baseline;justify-content:center;gap:10px;flex-wrap:wrap;margin:12px 0 0}
+  .cd-big{font:800 clamp(46px,12vw,80px)/1 var(--font-display);letter-spacing:-.045em;
+    color:var(--state);font-variant-numeric:tabular-nums}
+  .cd-sec{font:700 clamp(17px,4.2vw,24px)/1 var(--font-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+  .switchline{margin:15px 0 0;font:500 13.5px/1.5 var(--font-mono);color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .bar{height:7px;max-width:520px;margin:22px auto 0;border:1px solid var(--line);border-radius:999px;
+    background:var(--well);overflow:hidden}
+  .bar i{display:block;height:100%;width:0;border-radius:999px;background:var(--state);transition:width .25s linear}
+  .meta{margin:11px 0 0;font:500 12.5px/1.5 var(--font-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+
+  /* The framed board, haloed like a product screenshot set down on the page. */
+  .board{margin:clamp(46px,7vw,70px) 0 0;background:var(--card);border:1px solid var(--accent-line);
+    border-radius:24px;padding:clamp(20px,4vw,30px);
+    box-shadow:0 0 0 8px var(--accent-halo),0 34px 60px -34px rgba(196,156,20,.5),0 2px 4px rgba(20,19,16,.03)}
+  .board-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+  h2{margin:0;font:600 11px/1.4 var(--font-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .tz{color:var(--ink-2);letter-spacing:.06em}
+  .legend{display:flex;gap:16px;font:500 11px/1 var(--font-mono);letter-spacing:.04em;color:var(--muted);text-transform:uppercase}
+  .legend i{display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:7px;vertical-align:middle}
+  .legend i.off{background:var(--off-fill)}
+  .legend i.peak{background:var(--peak-fill)}
+  .strip{position:relative;height:18px;border:1px solid var(--line);border-radius:9px;background:var(--well);overflow:hidden}
   .seg{position:absolute;top:0;bottom:0}
-  .seg.off{background:rgba(49,207,139,.55)}
-  .seg.peak{background:rgba(243,166,61,.55)}
-  .marker{position:absolute;top:0;bottom:0;width:2px;background:#fff;border-radius:2px;
-    box-shadow:0 0 10px rgba(255,255,255,.8);z-index:3;transform:translateX(-1px)}
-  .ticks{position:relative;height:14px;margin-top:6px}
-  .ticks span{position:absolute;top:0;font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums}
-  .legend{display:flex;gap:16px;margin-top:10px;font-size:12.5px;color:var(--muted)}
-  .legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
-  .legend i.off{background:var(--off)} .legend i.peak{background:var(--peak)}
+  .seg.off{background:var(--off-fill)}
+  .seg.peak{background:var(--peak-fill)}
+  .marker{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink);border-radius:2px;z-index:3;
+    transform:translateX(-1px);box-shadow:0 0 0 3px rgba(255,255,255,.9)}
+  .ticks{position:relative;height:15px;margin-top:8px;font:500 10.5px/1 var(--font-mono);
+    color:var(--muted);font-variant-numeric:tabular-nums}
+  .ticks span{position:absolute;top:0}
+  .rule{margin:22px 0 18px;border:0;border-top:1px solid var(--hair)}
 
-  ul#nextList{list-style:none;margin:0;padding:0;display:grid;gap:8px}
-  ul#nextList li{display:flex;align-items:baseline;gap:10px;padding:9px 12px;border:1px solid var(--line);
-    border-radius:12px;background:#0b1119;font-variant-numeric:tabular-nums;font-size:14px}
-  ul#nextList .t{font-weight:650}
-  ul#nextList .z{color:var(--muted);font-size:12.5px}
-  ul#nextList .to{margin-left:auto;font-size:12.5px;font-weight:600;white-space:nowrap}
-  .to.off{color:var(--off)} .to.peak{color:var(--peak)}
+  ul#nextList{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:8px}
+  ul#nextList li{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid var(--hair);
+    border-radius:12px;background:#FCFBF8;font:500 13.5px/1 var(--font-mono);font-variant-numeric:tabular-nums}
+  ul#nextList .t{font-weight:700;color:var(--ink)}
+  ul#nextList .z{color:var(--muted);font-size:12px}
+  ul#nextList .to{margin-left:auto;display:inline-flex;align-items:center;gap:7px;padding:4px 10px;
+    border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.02em;white-space:nowrap}
+  ul#nextList .to::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+  .to.off{color:var(--off);background:var(--off-soft);border:1px solid var(--off-line)}
+  .to.peak{color:var(--peak);background:var(--peak-soft);border:1px solid var(--peak-line)}
 
-  footer{margin-top:22px;padding-top:14px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
-  footer p{margin:0 0 6px}
-  footer a{color:var(--ink)}
-  @media (max-width:520px){.top{flex-direction:column}.clocks{text-align:left}}
-  @media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+  .stats{margin:clamp(40px,6vw,58px) 0 0;padding-top:26px;border-top:1px solid var(--line);
+    display:grid;grid-template-columns:repeat(4,1fr);gap:22px 14px;text-align:center}
+  .stat b{display:block;font:800 clamp(22px,4.6vw,30px)/1 var(--font-display);letter-spacing:-.03em;
+    color:var(--ink);font-variant-numeric:tabular-nums}
+  .stat span{display:block;margin-top:9px;font:500 10.5px/1.45 var(--font-mono);
+    letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+
+  footer{margin-top:clamp(34px,6vw,52px);padding-top:20px;border-top:1px solid var(--line);
+    font:500 12px/1.7 var(--font-mono);color:var(--muted)}
+  footer p{margin:0 0 8px}
+  footer p:last-child{margin-bottom:0}
+  footer a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--accent-deep);text-underline-offset:3px}
+
+  @media (max-width:560px){
+    .stats{grid-template-columns:repeat(2,1fr);gap:20px 12px}
+    .legend{font-size:10.5px;gap:12px}
+    .board-head{align-items:flex-start;flex-direction:column}
+  }
+  @media (prefers-reduced-motion:reduce){.bar i{transition:none}#tzSelect{transition:none}}
 </style>
 </head>
 <body data-state="off">
-<main class="card">
-  <header class="top">
-    <div>
-      <h1>DeepSeek pricing right now</h1>
-      <p class="sub">All comparisons in UTC+8. Off-peak is 50% off peak rates.</p>
+<main class="page">
+
+  <header class="hero">
+    <p class="eyebrow"><i class="dot"></i>DeepSeek API pricing, live</p>
+    <h1 class="display" id="displayHeadline">Off-peak right now.</h1>
+    <p class="lede">Off-peak is 50% off peak rates. Every time on this page follows <span data-tz-name>UTC+8</span>; the schedule itself is fixed in UTC.</p>
+    <div class="picker">
+      <label class="micro" for="tzSelect">Display timezone</label>
+      <select id="tzSelect"></select>
     </div>
-    <div class="clocks">
-      <div class="pri"><b id="clockBase">--:--:--</b>UTC+8</div>
-      <div><b id="clockUTC">--:--:--</b>UTC</div>
-    </div>
+    <p class="clockline">
+      <span class="clock pri"><b id="clockBase">--:--:--</b><span class="unit" id="clockBaseLabel">UTC+8</span></span>
+      <span class="clock-sep">/</span>
+      <span class="clock"><b id="clockUTC">--:--:--</b><span class="unit">UTC</span></span>
+    </p>
   </header>
 
-  <section class="status">
-    <div class="badge" id="badge">Checking</div>
-    <p class="headline" id="headline">Checking the schedule…</p>
-    <div class="countdown">
-      <span class="cd-label" id="cdLabel">Switches in</span>
-      <span class="cd-value" id="cdValue">--h --m</span>
-      <span class="cd-secs" id="cdSecs">--s</span>
-    </div>
+  <section class="count">
+    <p class="micro" id="cdLabel">Off-peak ends in</p>
+    <p class="cd"><span class="cd-big" id="cdValue">--h --m</span><span class="cd-sec" id="cdSecs">--s</span></p>
     <p class="switchline" id="switchLine"></p>
     <div class="bar" role="presentation"><i id="bar"></i></div>
-    <p class="barlabel" id="barLabel">Progress through the current pricing window</p>
+    <p class="meta" id="barLabel">Progress through the current pricing window</p>
   </section>
 
-  <section class="timeline">
-    <h2>Your day at a glance <span class="tz">(UTC+8)</span></h2>
+  <section class="board">
+    <div class="board-head">
+      <h2>Your day at a glance <span class="tz" data-tz>(UTC+8)</span></h2>
+      <div class="legend">
+        <span><i class="off"></i>Off-peak · 50% off</span>
+        <span><i class="peak"></i>Peak · full price</span>
+      </div>
+    </div>
     <div class="strip" id="strip"><span class="marker" id="marker"></span></div>
     <div class="ticks" id="ticks"></div>
-    <div class="legend">
-      <span><i class="off"></i>Off-peak · 50% off</span>
-      <span><i class="peak"></i>Peak · full price</span>
-    </div>
-  </section>
-
-  <section class="next">
-    <h2>Next switches <span class="tz">(UTC+8)</span></h2>
+    <hr class="rule">
+    <h2>Next switches <span class="tz" data-tz>(UTC+8)</span></h2>
     <ul id="nextList"></ul>
   </section>
 
+  <section class="stats">
+    <div class="stat"><b>17h</b><span>Off-peak per day</span></div>
+    <div class="stat"><b>7h</b><span>Peak per day</span></div>
+    <div class="stat"><b>50%</b><span>Off peak rates</span></div>
+    <div class="stat"><b id="statLongest">9h</b><span>Longest off-peak run</span></div>
+  </section>
+
   <footer>
-    <p>Schedule (UTC+8): off-peak 00:00–09:00, peak 09:00–12:00, off-peak 12:00–14:00, peak 14:00–18:00, off-peak 18:00–24:00 — 17 h per day at 50% off.</p>
+    <p id="scheduleNote">Schedule (UTC+8): off-peak 00:00–09:00, peak 09:00–12:00, off-peak 12:00–14:00, peak 14:00–18:00, off-peak 18:00–24:00 — 17 h per day at 50% off.</p>
     <p>Same schedule in UTC: peak 01:00–04:00 and 06:00–10:00, off-peak all other hours. <a href="https://api-docs.deepseek.com/quick_start/pricing/" target="_blank" rel="noreferrer">DeepSeek API docs — Models &amp; Pricing</a>; effective 16 Aug 2026.</p>
   </footer>
-</main>
 
+</main>
 <script>
 (function () {
   "use strict";
@@ -138,12 +214,68 @@
   var PEAK_WINDOWS = [[60, 240], [360, 600]]; // UTC day-minutes, [start, end)
   var BOUNDARIES = [60, 240, 360, 600];       // UTC day-minutes where the price changes
 
-  // Fixed display base: UTC+8 (no DST, so a constant offset is exact).
-  var BASE_OFFSET_MIN = 480;
-  var BASE_LABEL = "UTC+8";
+  // Display base: a plain UTC offset in minutes, so no DST rules are needed. It starts
+  // at UTC+8 and is changed by the timezone picker.
+  var DEFAULT_OFFSET_MIN = 480; // UTC+8
+  var MIN_OFFSET_MIN = -720;    // UTC-12
+  var MAX_OFFSET_MIN = 840;     // UTC+14
+  var baseOffsetMin = DEFAULT_OFFSET_MIN;
+  var baseLabel = offsetLabel(baseOffsetMin);
 
   function pad2(n) { return (n < 10 ? "0" : "") + n; }
   function wrapDay(min) { return ((min % DAY_MIN) + DAY_MIN) % DAY_MIN; }
+
+  function offsetLabel(min) {
+    if (min === 0) return "UTC";
+    var abs = Math.abs(min);
+    return "UTC" + (min < 0 ? "-" : "+") + Math.floor(abs / 60) + (abs % 60 ? ":" + pad2(abs % 60) : "");
+  }
+
+  function minuteLabel(min) {
+    return min >= DAY_MIN ? "24:00" : pad2(Math.floor(min / 60)) + ":" + pad2(min % 60);
+  }
+
+  // Every offset the picker offers: whole hours from UTC-12 to UTC+14, plus the
+  // real-world half-hour and quarter-hour zones. [minutes, hint]
+  var ODD_ZONES = [
+    [-570, "Marquesas"], [-210, "Newfoundland"], [210, "Iran"], [270, "Afghanistan"],
+    [330, "India"], [345, "Nepal"], [390, "Myanmar"], [525, "Eucla"],
+    [570, "Adelaide"], [630, "Lord Howe"], [765, "Chatham Is."], [825, "Chatham Is. (DST)"]
+  ];
+
+  function pickerOffsets() {
+    var out = [];
+    for (var h = MIN_OFFSET_MIN / 60; h <= MAX_OFFSET_MIN / 60; h++) out.push([h * 60, ""]);
+    for (var i = 0; i < ODD_ZONES.length; i++) out.push(ODD_ZONES[i]);
+    return out;
+  }
+
+  function isKnownOffset(min) {
+    var all = pickerOffsets();
+    for (var i = 0; i < all.length; i++) if (all[i][0] === min) return true;
+    return false;
+  }
+
+  // Accepts a number or numeric string from the picker or from storage; returns the
+  // offset in minutes, or null when it is not one of the offered offsets.
+  function coerceOffset(value) {
+    var v = typeof value === "number" ? value
+      : (typeof value === "string" && value.trim() !== "" ? Number(value) : NaN);
+    if (!isFinite(v) || v % 15 !== 0) return null;
+    v = Math.round(v);
+    return isKnownOffset(v) ? v : null;
+  }
+
+  function getBaseOffset() { return baseOffsetMin; }
+  function getBaseLabel() { return baseLabel; }
+
+  function setBaseOffset(min) {
+    var v = coerceOffset(min);
+    if (v === null) return baseOffsetMin;
+    baseOffsetMin = v;
+    baseLabel = offsetLabel(v);
+    return baseOffsetMin;
+  }
 
   function utcSecondsOfDay(ms) {
     var d = new Date(ms);
@@ -221,6 +353,50 @@
     return (((utcSecondsOfDay(ms) + offsetMin * 60000) % 86400000) + 86400000) % 86400000;
   }
 
+  // Contiguous runs of constant pricing state across the display day, used for the
+  // schedule line in the footer and for the day strip.
+  function displaySegments(offsetMin) {
+    var out = [];
+    var bounds = [0].concat(displayBoundaries(offsetMin), [DAY_MIN]);
+    for (var i = 0; i < bounds.length - 1; i++) {
+      var a = bounds[i];
+      var b = bounds[i + 1];
+      if (b <= a) continue;
+      out.push({ start: a, end: b, off: isOffPeakAtDisplayMinute(Math.floor((a + b) / 2), offsetMin) });
+    }
+    return out;
+  }
+
+  // Footer sentence for a given offset, e.g. "Schedule (UTC+8): off-peak 00:00-09:00, ...".
+  function scheduleNote(offsetMin) {
+    var segs = displaySegments(offsetMin);
+    var parts = [];
+    var offMin = 0;
+    for (var i = 0; i < segs.length; i++) {
+      if (segs[i].off) offMin += segs[i].end - segs[i].start;
+      parts.push((segs[i].off ? "off-peak " : "peak ") + minuteLabel(segs[i].start) + "\u2013" + minuteLabel(segs[i].end));
+    }
+    return "Schedule (" + offsetLabel(offsetMin) + "): " + parts.join(", ") +
+      " \u2014 " + (offMin / 60) + " h per day at 50% off.";
+  }
+
+  // Longest unbroken off-peak run inside the display day, in minutes.
+  function longestOffPeakRunMin(offsetMin) {
+    var segs = displaySegments(offsetMin);
+    var best = 0;
+    for (var i = 0; i < segs.length; i++) {
+      if (segs[i].off && segs[i].end - segs[i].start > best) best = segs[i].end - segs[i].start;
+    }
+    return best;
+  }
+
+  function stretchLabel(minutes) {
+    var h = Math.floor(minutes / 60);
+    var m = minutes % 60;
+    if (!h) return m + "m";
+    return m ? h + "h " + pad2(m) + "m" : h + "h";
+  }
+
   var WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   function fmtHM(ms, offsetMin) {
@@ -235,12 +411,11 @@
     var d = new Date(ms + offsetMin * 60000);
     return WEEKDAYS[d.getUTCDay()] + " " + fmtHM(ms, offsetMin);
   }
-  function baseHM(ms) { return fmtHM(ms, BASE_OFFSET_MIN); }
+  function baseHM(ms) { return fmtHM(ms, baseOffsetMin); }
   function utcHM(ms) { return fmtHM(ms, 0); }
   // ===== SCHEDULE-LOGIC-END =====
 
-  var badge = document.getElementById("badge");
-  var headline = document.getElementById("headline");
+  var displayHeadline = document.getElementById("displayHeadline");
   var cdLabel = document.getElementById("cdLabel");
   var cdValue = document.getElementById("cdValue");
   var cdSecs = document.getElementById("cdSecs");
@@ -253,10 +428,52 @@
   var nextList = document.getElementById("nextList");
   var clockBase = document.getElementById("clockBase");
   var clockUTC = document.getElementById("clockUTC");
+  var clockBaseLabel = document.getElementById("clockBaseLabel");
+  var statLongest = document.getElementById("statLongest");
+  var tzSelect = document.getElementById("tzSelect");
+  var tzParens = document.querySelectorAll("[data-tz]");
+  var tzNames = document.querySelectorAll("[data-tz-name]");
+  var metaDesc = document.getElementById("metaDesc");
+  var scheduleNoteEl = document.getElementById("scheduleNote");
+
+  var STORE_KEY = "deepseek-off-peak:utc-offset";
 
   var lastState = "";
   var lastNext = 0;
   var lastWindowKey = "";
+
+  function storeOffset(min) {
+    try { window.localStorage.setItem(STORE_KEY, String(min)); } catch (e) { /* private mode */ }
+  }
+
+  // The visitor's last pick wins; anything unknown falls back to UTC+8.
+  function readStoredOffset() {
+    try {
+      var raw = window.localStorage.getItem(STORE_KEY);
+      if (raw !== null) {
+        var v = coerceOffset(raw);
+        if (v !== null) return v;
+      }
+    } catch (e) { /* private mode */ }
+    return DEFAULT_OFFSET_MIN;
+  }
+
+  function buildPicker() {
+    var whole = document.createElement("optgroup");
+    whole.label = "Whole hours";
+    var odd = document.createElement("optgroup");
+    odd.label = "Half and quarter hours";
+    var all = pickerOffsets();
+    for (var i = 0; i < all.length; i++) {
+      var opt = document.createElement("option");
+      opt.value = String(all[i][0]);
+      opt.textContent = all[i][1] ? offsetLabel(all[i][0]) + " \u00b7 " + all[i][1] : offsetLabel(all[i][0]);
+      (all[i][1] ? odd : whole).appendChild(opt);
+    }
+    tzSelect.appendChild(whole);
+    tzSelect.appendChild(odd);
+    tzSelect.setAttribute("aria-label", "Display timezone, as a UTC offset");
+  }
 
   function humanGap(ms) {
     var total = Math.max(0, Math.floor(ms / 60000));
@@ -266,12 +483,17 @@
   function setText(el, txt) { if (el.textContent !== txt) el.textContent = txt; }
 
   function buildStrip() {
-    var bounds = [0].concat(displayBoundaries(BASE_OFFSET_MIN), [DAY_MIN]);
+    var offset = getBaseOffset();
+    var stale = strip.querySelectorAll(".seg");
+    for (var k = 0; k < stale.length; k++) strip.removeChild(stale[k]);
+    ticks.textContent = "";
+    var bounds = [0].concat(displayBoundaries(offset), [DAY_MIN]);
     for (var i = 0; i < bounds.length - 1; i++) {
       var a = bounds[i];
       var b = bounds[i + 1];
+      if (b <= a) continue;
       var seg = document.createElement("span");
-      seg.className = "seg " + (isOffPeakAtDisplayMinute((a + b) / 2, BASE_OFFSET_MIN) ? "off" : "peak");
+      seg.className = "seg " + (isOffPeakAtDisplayMinute(Math.floor((a + b) / 2), offset) ? "off" : "peak");
       seg.style.left = (a / DAY_MIN * 100) + "%";
       seg.style.width = ((b - a) / DAY_MIN * 100) + "%";
       strip.insertBefore(seg, marker);
@@ -294,7 +516,7 @@
       var li = document.createElement("li");
       var local = document.createElement("span");
       local.className = "t";
-      local.textContent = fmtDayHM(it.at, BASE_OFFSET_MIN);
+      local.textContent = fmtDayHM(it.at, getBaseOffset());
       var utc = document.createElement("span");
       utc.className = "z";
       utc.textContent = utcHM(it.at) + " UTC";
@@ -316,30 +538,27 @@
     var state = off ? "off" : "peak";
     if (state !== lastState) {
       document.body.setAttribute("data-state", state);
-      setText(badge, off ? "Off-peak" : "Peak");
+      setText(displayHeadline, off ? "Off-peak right now." : "Peak right now.");
       lastState = state;
     }
     var next = nextSwitchMs(now);
-    setText(headline, off
-      ? "Off-peak pricing is active: 50% off peak rates."
-      : "Peak pricing is active: full price.");
     setText(cdLabel, off ? "Off-peak ends in" : "Off-peak begins in");
     setText(cdValue, humanGap(next - now));
     setText(cdSecs, humanSecs(next - now));
-    setText(switchLine, (off ? "Full price at " : "50% off at ") + baseHM(next) + " " + BASE_LABEL + " (" + utcHM(next) + " UTC)");
+    setText(switchLine, (off ? "Full price at " : "50% off at ") + baseHM(next) + " " + getBaseLabel() + " (" + utcHM(next) + " UTC)");
 
     var p = periodBounds(now);
     var frac = (now - p.start) / (p.end - p.start);
     bar.style.width = (Math.min(1, Math.max(0, frac)) * 100).toFixed(2) + "%";
-    marker.style.left = (displaySecondsOfDay(now, BASE_OFFSET_MIN) / 864000).toFixed(3) + "%";
+    marker.style.left = (displaySecondsOfDay(now, getBaseOffset()) / 864000).toFixed(3) + "%";
 
     var windowKey = p.start + ":" + p.end;
     if (windowKey !== lastWindowKey) {
-      setText(barLabel, "Window " + baseHM(p.start) + "–" + baseHM(p.end) + " " + BASE_LABEL + " · " + (Math.round(frac * 100)) + "% elapsed");
+      setText(barLabel, "Window " + baseHM(p.start) + "\u2013" + baseHM(p.end) + " " + getBaseLabel() + " \u00b7 " + (Math.round(frac * 100)) + "% elapsed");
       lastWindowKey = windowKey;
     }
 
-    setText(clockBase, fmtHMS(now, BASE_OFFSET_MIN));
+    setText(clockBase, fmtHMS(now, getBaseOffset()));
     setText(clockUTC, fmtHMS(now, 0));
 
     if (next !== lastNext) {
@@ -348,8 +567,40 @@
     }
   }
 
-  buildStrip();
-  tick();
+  function updateLabels() {
+    var label = getBaseLabel();
+    for (var i = 0; i < tzParens.length; i++) tzParens[i].textContent = "(" + label + ")";
+    for (var j = 0; j < tzNames.length; j++) tzNames[j].textContent = label;
+    setText(clockBaseLabel, label);
+    setText(statLongest, stretchLabel(longestOffPeakRunMin(getBaseOffset())));
+    setText(scheduleNoteEl, scheduleNote(getBaseOffset()));
+    document.title = "Is DeepSeek off-peak right now? (" + label + ")";
+    if (metaDesc) {
+      metaDesc.setAttribute("content", "Live DeepSeek off-peak pricing status in " + label +
+        " with a countdown to the next switch. Off-peak is 50% off peak rates.");
+    }
+    tzSelect.setAttribute("aria-label", "Display timezone: " + label);
+  }
+
+  function applyOffset(offsetMin, persist) {
+    setBaseOffset(offsetMin);
+    tzSelect.value = String(getBaseOffset());
+    updateLabels();
+    buildStrip();
+    lastState = "";
+    lastNext = 0;
+    lastWindowKey = "";
+    tick();
+    if (persist) storeOffset(getBaseOffset());
+  }
+
+  tzSelect.addEventListener("change", function () {
+    var v = coerceOffset(tzSelect.value);
+    if (v !== null) applyOffset(v, true);
+  });
+
+  buildPicker();
+  applyOffset(readStoredOffset(), false);
   setInterval(tick, 250);
 })();
 </script>
