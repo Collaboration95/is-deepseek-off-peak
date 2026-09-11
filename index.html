@@ -19,16 +19,18 @@
     --accent-wash:rgba(19,19,187,.09); --accent-shadow:rgba(19,19,187,.32);
     --accent-glow:rgba(19,19,187,.70); --accent-glow-strong:rgba(19,19,187,.95);
     --off:#0C7A57; --off-soft:#E9F6EF; --off-line:#C6E6D7; --off-fill:#A9DEC4;
+    --off-halo:rgba(12,122,87,.34);
     /* The peak family is the requested light blue, #7272D7, with tints mixed from it.
        --peak itself is what the big countdown uses; --peak-ink is the same hue carried
        darker so the small chip labels clear the 4.5:1 contrast bar. */
     --peak:#7272D7; --peak-ink:#4A4AB8; --peak-soft:#EFEFFA; --peak-line:#C9C9EE; --peak-fill:#BEBEEA;
+    --peak-halo:rgba(114,114,215,.38);
     --font-display:"Inter Tight","Inter",-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     --font-mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,"JetBrains Mono","Roboto Mono",Consolas,monospace;
 
     /* One-screen rhythm. Every vertical measure below is tied to viewport height, so a
        short window compresses the page instead of pushing the footer out of sight.
-       The layout budget in the README is derived from these tokens. */
+       Each of these is retuned by the narrow and short-window blocks at the end. */
     --pad-y:clamp(13px,2.4vh,32px);      /* page padding, top and bottom        */
     --gap-y:clamp(10px,2vh,23px);        /* space between the three page bands  */
     --pad-card:clamp(14px,2.3vh,26px);   /* inner padding of the two panels     */
@@ -46,8 +48,10 @@
     font-family:var(--font-display);font-size:17px;line-height:1.5;
     -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
   }
-  body[data-state="off"]{--state:var(--off);--state-soft:var(--off-soft);--state-line:var(--off-line)}
-  body[data-state="peak"]{--state:var(--peak);--state-soft:var(--peak-soft);--state-line:var(--peak-line)}
+  body[data-state="off"]{--state:var(--off);--state-soft:var(--off-soft);--state-line:var(--off-line);
+    --state-halo:var(--off-halo)}
+  body[data-state="peak"]{--state:var(--peak);--state-soft:var(--peak-soft);--state-line:var(--peak-line);
+    --state-halo:var(--peak-halo)}
 
   /* Hairline engineering paper, fixed to the viewport so it never scrolls away. */
   body::before{
@@ -76,10 +80,21 @@
 
   /* ---- band 1: headline and controls, side by side on a laptop ---- */
   .hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:clamp(12px,2.6vw,36px);align-items:center}
-  .eyebrow{display:inline-flex;align-items:center;gap:9px;margin:0 0 9px;
-    font-family:var(--font-mono);font-size:12.5px;font-weight:600;line-height:1;
-    letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
-  .dot{width:7px;height:7px;border-radius:50%;background:var(--state);box-shadow:0 0 0 4px var(--state-soft)}
+  /* One typographic role for every small uppercase mono label on the page. */
+  .eyebrow,.micro,h2{margin:0;font-family:var(--font-mono);font-size:12.5px;font-weight:600;
+    letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;line-height:1;margin-bottom:9px}
+  /* A slow halo that expands and fades, so the dot reads as a live indicator rather
+     than a static bullet. It is the only motion on the page besides the progress bar. */
+  .dot{position:relative;width:8px;height:8px;border-radius:50%;background:var(--state);
+    box-shadow:0 0 0 4px var(--state-soft)}
+  .dot::after{content:"";position:absolute;inset:0;border-radius:50%;
+    animation:dotPulse 2.6s ease-out infinite}
+  @keyframes dotPulse{
+    0%{box-shadow:0 0 0 0 var(--state-halo);opacity:1}
+    70%{box-shadow:0 0 0 9px var(--state-halo);opacity:0}
+    100%{box-shadow:0 0 0 9px var(--state-halo);opacity:0}
+  }
   .display{margin:0;font-family:var(--font-display);font-weight:800;font-size:var(--fs-display);
     line-height:1;letter-spacing:-.035em;color:var(--ink);max-width:20ch}
   .lede{margin:9px 0 0;max-width:52ch;font-family:var(--font-mono);font-size:var(--fs-lead);
@@ -88,8 +103,7 @@
 
   .hero-ctl{display:flex;flex-direction:column;align-items:flex-end;gap:clamp(7px,1.3vh,12px)}
   .picker{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
-  .micro{margin:0;font-family:var(--font-mono);font-size:12.5px;font-weight:600;line-height:1.3;
-    letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .micro{line-height:1.3}
   #tzSelect{
     -webkit-appearance:none;appearance:none;cursor:pointer;
     background:var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23FFFFFF' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 14px center;
@@ -133,19 +147,17 @@
     padding:var(--pad-card);
     box-shadow:0 0 0 6px var(--accent-halo),0 22px 40px -30px var(--accent-shadow)}
   .board-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-  h2{margin:0;font-family:var(--font-mono);font-size:12.5px;font-weight:600;line-height:1.4;
-    letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+  h2{line-height:1.4}
   .tz{color:var(--ink-2);letter-spacing:.06em}
   .legend{display:flex;gap:16px;font-family:var(--font-mono);font-size:11.5px;font-weight:500;line-height:1;
     letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
   .legend i{display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:6px;vertical-align:middle}
-  .legend i.off{background:var(--off-fill)}
-  .legend i.peak{background:var(--peak-fill)}
   .strip{position:relative;height:var(--strip-h);border:1px solid var(--line);border-radius:9px;
     background:var(--well);overflow:hidden;margin-top:clamp(8px,1.4vh,13px)}
   .seg{position:absolute;top:0;bottom:0}
-  .seg.off{background:var(--off-fill)}
-  .seg.peak{background:var(--peak-fill)}
+  /* The legend swatches and the strip segments are the same two colours. */
+  .legend i.off,.seg.off{background:var(--off-fill)}
+  .legend i.peak,.seg.peak{background:var(--peak-fill)}
   .marker{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink);border-radius:2px;z-index:3;
     transform:translateX(-1px);box-shadow:0 0 0 3px rgba(255,255,255,.9)}
   .ticks{position:relative;height:16px;margin-top:7px;font-family:var(--font-mono);font-size:11.5px;
@@ -153,29 +165,25 @@
   .ticks span{position:absolute;top:0}
   .rule{margin:clamp(10px,1.6vh,16px) 0 clamp(9px,1.4vh,14px);border:0;border-top:1px solid var(--hair)}
 
-  ul#nextList{list-style:none;margin:clamp(8px,1.3vh,12px) 0 0;padding:0;display:grid;gap:6px}
-  ul#nextList li{display:flex;align-items:center;gap:10px;padding:var(--row-y) 13px;
+  #nextList{list-style:none;margin:clamp(8px,1.3vh,12px) 0 0;padding:0;display:grid;gap:6px}
+  #nextList li{display:flex;align-items:center;gap:10px;padding:var(--row-y) 13px;
     border:1px solid var(--hair);border-radius:11px;background:#FCFBF8;
     font-family:var(--font-mono);font-size:14.5px;font-weight:500;line-height:1.2;
     font-variant-numeric:tabular-nums}
-  ul#nextList .t{font-weight:700;color:var(--ink)}
-  ul#nextList .z{color:var(--muted);font-size:13px}
-  ul#nextList .to{margin-left:auto;display:inline-flex;align-items:center;gap:6px;
+  #nextList .t{font-weight:700;color:var(--ink)}
+  #nextList .z{color:var(--muted);font-size:13px}
+  #nextList .to{margin-left:auto;display:inline-flex;align-items:center;gap:6px;
     padding:4px 10px;border-radius:999px;font-size:11.5px;font-weight:600;letter-spacing:.02em;white-space:nowrap}
-  ul#nextList .to::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+  #nextList .to::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
   .to.off{color:var(--off);background:var(--off-soft);border:1px solid var(--off-line)}
   .to.peak{color:var(--peak-ink);background:var(--peak-soft);border:1px solid var(--peak-line)}
 
-  /* ---- band 3: invariants, then the schedule note ---- */
+  /* ---- band 3: the schedule note and attribution ---- */
   .foot{display:grid;gap:clamp(6px,1vh,10px)}
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 10px;text-align:center;
-    padding-top:clamp(10px,1.6vh,16px);border-top:1px solid var(--line)}
-  .stat b{display:block;font-family:var(--font-display);font-weight:800;
-    font-size:clamp(22px,min(3.9vw,4.1vh),32px);line-height:1;letter-spacing:-.03em;
-    color:var(--ink);font-variant-numeric:tabular-nums}
-  .stat span{display:block;margin-top:7px;font-family:var(--font-mono);font-size:11.5px;
-    font-weight:500;line-height:1.35;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-  #scheduleNote,.fine{margin:0;font-family:var(--font-mono);font-size:12.5px;line-height:1.55;color:var(--muted)}
+  #scheduleNote,.fine{margin:0;font-family:var(--font-mono);font-size:13.5px;line-height:1.6;
+    color:var(--ink-2)}
+  #scheduleNote{padding-top:clamp(10px,1.6vh,16px);border-top:1px solid var(--line)}
+  .fine{color:var(--muted)}
   .fine a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--accent-deep);text-underline-offset:3px}
 
   @media (max-width:860px){
@@ -193,40 +201,31 @@
     .hero-ctl{align-items:center}
     .picker{align-items:center}
     .lede{display:none}
-    .utcnote{display:none}
-    /* The strip, legend, switch list and stats already state the schedule on a phone,
-       so the recap sentence stands down and the page keeps to one screen. */
+    /* The strip, legend and switch list already state the schedule on a phone, so the
+       recap sentence stands down and the page keeps to one screen. */
     #scheduleNote{display:none}
     .main{grid-template-columns:1fr;background:var(--card);border:1px solid var(--accent-line);
       border-radius:var(--radius);padding:var(--pad-card);
       box-shadow:0 0 0 6px var(--accent-halo),0 22px 40px -30px var(--accent-shadow)}
     .count,.board{background:none;border:0;border-radius:0;box-shadow:none;padding:0}
     .count{padding-bottom:var(--gap-y);border-bottom:1px solid var(--hair);margin-bottom:var(--gap-y)}
-    ul#nextList li{font-size:13.5px;padding:var(--row-y) 11px}
+    #nextList li{font-size:13.5px;padding:var(--row-y) 11px}
     h2,.legend{text-align:left}
-  }
-  @media (max-width:660px){
-    /* The strip is too small for an axis to read at this width. */
-    .ticks{display:none}
   }
   @media (max-width:560px){
     .board-head{align-items:flex-start;flex-direction:column;gap:6px}
-    .stats{gap:6px 6px}
-    .stat span{font-size:10.5px;letter-spacing:.04em}
     .legend{font-size:11px;gap:12px}
   }
   @media (max-height:700px){
     /* Short windows: keep the attribution, drop the UTC restatement and the axis, and
        tighten the two blocks that dominate the height. */
     :root{--fs-count:clamp(30px,min(8.6vw,7.6vh),60px)}
-    ul#nextList li{padding:4px 11px;font-size:12.5px}
+    #nextList li{padding:4px 11px;font-size:12.5px}
     .rule{margin:8px 0}
-    .utcnote{display:none}
-    .ticks{display:none}
   }
   @media (max-height:700px) and (max-width:860px){
     /* On a short phone the chrome around the strip goes: headings, legend and the
-       window caption, leaving the countdown, the strip, the switches and the stats. */
+       window caption, leaving the countdown, the strip and the switches. */
     :root{
       --fs-count:clamp(26px,min(8.2vw,6.8vh),52px);
       --gap-y:clamp(7px,1.1vh,12px);
@@ -237,7 +236,12 @@
     .meta{display:none}
     .board{border-color:var(--line)}
   }
-  @media (prefers-reduced-motion:reduce){.bar i{transition:none}#tzSelect{transition:none}}
+  /* Stated once each rather than repeated inside three separate blocks. The axis is too
+     small to read on a phone, and the UTC restatement is redundant from a phone or when
+     the window is short. */
+  @media (max-width:660px),(max-height:700px){.ticks{display:none}}
+  @media (max-width:860px),(max-height:700px){.utcnote{display:none}}
+  @media (prefers-reduced-motion:reduce){.bar i{transition:none}#tzSelect{transition:none}.dot::after{animation:none}}
 </style>
 </head>
 <body data-state="off">
@@ -255,9 +259,9 @@
         <select id="tzSelect"></select>
       </div>
       <p class="clockline">
-        <span class="clock pri"><b id="clockBase">--:--:--</b><span class="unit" id="clockBaseLabel">UTC+8</span></span>
+        <span class="pri"><b id="clockBase">--:--:--</b><span class="unit" id="clockBaseLabel">UTC+8</span></span>
         <span class="sep">/</span>
-        <span class="clock"><b id="clockUTC">--:--:--</b><span class="unit">UTC</span></span>
+        <span><b id="clockUTC">--:--:--</b><span class="unit">UTC</span></span>
       </p>
     </div>
   </header>
@@ -267,7 +271,7 @@
       <p class="micro" id="cdLabel">Off-peak ends in</p>
       <p class="cd"><span class="cd-big" id="cdValue">--h --m</span><span class="cd-sec" id="cdSecs">--s</span></p>
       <p class="switchline" id="switchLine"></p>
-      <div class="bar" role="presentation"><i id="bar"></i></div>
+      <div class="bar"><i id="bar"></i></div>
       <p class="meta" id="barLabel">Progress through the current pricing window</p>
     </section>
 
@@ -288,13 +292,7 @@
   </div>
 
   <footer class="foot">
-    <section class="stats">
-      <div class="stat"><b>17h</b><span>Off-peak per day</span></div>
-      <div class="stat"><b>7h</b><span>Peak per day</span></div>
-      <div class="stat"><b>50%</b><span>Off peak rates</span></div>
-      <div class="stat"><b id="statLongest">9h</b><span>Longest off-peak run</span></div>
-    </section>
-    <p id="scheduleNote">Schedule (UTC+8): off-peak 00:00–09:00, peak 09:00–12:00, off-peak 12:00–14:00, peak 14:00–18:00, off-peak 18:00–24:00.</p>
+    <p id="scheduleNote">Schedule (UTC+8): off-peak 00:00–09:00, 12:00–14:00, 18:00–24:00; peak 09:00–12:00, 14:00–18:00.</p>
     <p class="fine"><span class="utcnote">Peak UTC hours: 01:00–04:00 and 06:00–10:00. </span><a href="https://api-docs.deepseek.com/quick_start/pricing/" target="_blank" rel="noreferrer">DeepSeek API docs — Models &amp; Pricing</a>, effective 16 Aug 2026.</p>
   </footer>
 
@@ -309,11 +307,16 @@
   // (17 h/day) at 50% off peak rates.
   var DAY_MIN = 1440;
   var PEAK_WINDOWS = [[60, 240], [360, 600]]; // UTC day-minutes, [start, end)
-  var BOUNDARIES = [60, 240, 360, 600];       // UTC day-minutes where the price changes
+  // Price-change instants, derived from the windows so the two cannot drift apart.
+  var BOUNDARIES = [];
+  for (var w = 0; w < PEAK_WINDOWS.length; w++) {
+    BOUNDARIES.push(PEAK_WINDOWS[w][0], PEAK_WINDOWS[w][1]);
+  }
 
   // Display base: a plain UTC offset in minutes, so no DST rules are needed. It starts
   // at UTC+8 and is changed by the timezone picker.
   var DEFAULT_OFFSET_MIN = 480; // UTC+8
+  var DEFAULT_LABEL = "UTC+8";
   var MIN_OFFSET_MIN = -720;    // UTC-12
   var MAX_OFFSET_MIN = 840;     // UTC+14
   var baseOffsetMin = DEFAULT_OFFSET_MIN;
@@ -464,33 +467,19 @@
     return out;
   }
 
-  // Footer sentence for a given offset, e.g. "Schedule (UTC+8): off-peak 00:00-09:00, ...".
+  // Footer sentence for a given offset, gathered by state rather than listed in clock
+  // order: "Schedule (UTC+8): off-peak 00:00-09:00, 12:00-14:00, 18:00-24:00; peak ...".
+  // Grouping says each range once and keeps the sentence short enough to hold one row.
   function scheduleNote(offsetMin) {
     var segs = displaySegments(offsetMin);
-    var parts = [];
+    var off = [];
+    var peak = [];
     for (var i = 0; i < segs.length; i++) {
-      parts.push((segs[i].off ? "off-peak " : "peak ") + minuteLabel(segs[i].start) + "\u2013" + minuteLabel(segs[i].end));
+      var run = minuteLabel(segs[i].start) + "\u2013" + minuteLabel(segs[i].end);
+      (segs[i].off ? off : peak).push(run);
     }
-    // No "17 h at 50% off" tail: the stats row states both, and the shorter sentence
-    // holds a single row in the footer on a laptop.
-    return "Schedule (" + offsetLabel(offsetMin) + "): " + parts.join(", ") + ".";
-  }
-
-  // Longest unbroken off-peak run inside the display day, in minutes.
-  function longestOffPeakRunMin(offsetMin) {
-    var segs = displaySegments(offsetMin);
-    var best = 0;
-    for (var i = 0; i < segs.length; i++) {
-      if (segs[i].off && segs[i].end - segs[i].start > best) best = segs[i].end - segs[i].start;
-    }
-    return best;
-  }
-
-  function stretchLabel(minutes) {
-    var h = Math.floor(minutes / 60);
-    var m = minutes % 60;
-    if (!h) return m + "m";
-    return m ? h + "h " + pad2(m) + "m" : h + "h";
+    return "Schedule (" + offsetLabel(offsetMin) + "): off-peak " + off.join(", ") +
+      "; peak " + peak.join(", ") + ".";
   }
 
   var WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -525,7 +514,6 @@
   var clockBase = document.getElementById("clockBase");
   var clockUTC = document.getElementById("clockUTC");
   var clockBaseLabel = document.getElementById("clockBaseLabel");
-  var statLongest = document.getElementById("statLongest");
   var tzSelect = document.getElementById("tzSelect");
   var tzParens = document.querySelectorAll("[data-tz]");
   var tzNames = document.querySelectorAll("[data-tz-name]");
@@ -533,6 +521,17 @@
   var scheduleNoteEl = document.getElementById("scheduleNote");
 
   var STORE_KEY = "deepseek-off-peak:utc-offset";
+
+  // The head already carries the wording, so the label is swapped into it rather than
+  // repeated here, where a copy would go stale. relabel() is a no-op if the default
+  // label is missing, which the static checks guard against.
+  var TITLE_TEMPLATE = document.title;
+  var DESC_TEMPLATE = metaDesc ? (metaDesc.getAttribute("content") || "") : "";
+
+  function relabel(text, label) {
+    if (typeof text !== "string" || text.indexOf(DEFAULT_LABEL) < 0) return text;
+    return text.split(DEFAULT_LABEL).join(label);
+  }
 
   var lastState = "";
   var lastNext = 0;
@@ -568,7 +567,6 @@
     }
     tzSelect.appendChild(whole);
     tzSelect.appendChild(odd);
-    tzSelect.setAttribute("aria-label", "Display timezone, as a UTC offset");
   }
 
   function humanGap(ms) {
@@ -583,13 +581,13 @@
     var stale = strip.querySelectorAll(".seg");
     for (var k = 0; k < stale.length; k++) strip.removeChild(stale[k]);
     ticks.textContent = "";
-    var bounds = [0].concat(displayBoundaries(offset), [DAY_MIN]);
-    for (var i = 0; i < bounds.length - 1; i++) {
-      var a = bounds[i];
-      var b = bounds[i + 1];
-      if (b <= a) continue;
+    // Same segments the footer sentence describes, so the strip and the text agree.
+    var segs = displaySegments(offset);
+    for (var i = 0; i < segs.length; i++) {
+      var a = segs[i].start;
+      var b = segs[i].end;
       var seg = document.createElement("span");
-      seg.className = "seg " + (isOffPeakAtDisplayMinute(Math.floor((a + b) / 2), offset) ? "off" : "peak");
+      seg.className = "seg " + (segs[i].off ? "off" : "peak");
       seg.style.left = (a / DAY_MIN * 100) + "%";
       seg.style.width = ((b - a) / DAY_MIN * 100) + "%";
       strip.insertBefore(seg, marker);
@@ -646,7 +644,7 @@
     var p = periodBounds(now);
     var frac = (now - p.start) / (p.end - p.start);
     bar.style.width = (Math.min(1, Math.max(0, frac)) * 100).toFixed(2) + "%";
-    marker.style.left = (displaySecondsOfDay(now, getBaseOffset()) / 864000).toFixed(3) + "%";
+    marker.style.left = (displaySecondsOfDay(now, getBaseOffset()) / (DAY_MIN * 60000) * 100).toFixed(3) + "%";
 
     var windowKey = p.start + ":" + p.end;
     if (windowKey !== lastWindowKey) {
@@ -668,14 +666,9 @@
     for (var i = 0; i < tzParens.length; i++) tzParens[i].textContent = "(" + label + ")";
     for (var j = 0; j < tzNames.length; j++) tzNames[j].textContent = label;
     setText(clockBaseLabel, label);
-    setText(statLongest, stretchLabel(longestOffPeakRunMin(getBaseOffset())));
     setText(scheduleNoteEl, scheduleNote(getBaseOffset()));
-    document.title = "Is DeepSeek off-peak right now? (" + label + ")";
-    if (metaDesc) {
-      metaDesc.setAttribute("content", "Live DeepSeek off-peak pricing status in " + label +
-        " with a countdown to the next switch. Off-peak is 50% off peak rates.");
-    }
-    tzSelect.setAttribute("aria-label", "Display timezone: " + label);
+    document.title = relabel(TITLE_TEMPLATE, label);
+    if (metaDesc) metaDesc.setAttribute("content", relabel(DESC_TEMPLATE, label));
   }
 
   function applyOffset(offsetMin, persist) {

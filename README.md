@@ -37,6 +37,8 @@ The schedule repeats every day, so it is the same in every timezone.
 
 The page fits one screen: three bands in a viewport-height grid, with every vertical measure tied to viewport height so a short window compresses it rather than pushing content below the fold. Below 860px wide the two panels fuse into one card and the lede drops; on a short phone the headings, legend and captions around the strip stand down.
 
+The dot beside the eyebrow pulses while the page is open: an expanding halo that fades, tinted with the current state colour, so it reads as a live indicator. It stands still under `prefers-reduced-motion`.
+
 ## Verify
 
     node verify.mjs

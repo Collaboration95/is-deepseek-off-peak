@@ -9,7 +9,7 @@ if (start < 0 || end < 0 || end <= start) {
   process.exit(1);
 }
 const code = html.slice(start, end);
-const S = new Function(code + "\nreturn {isOffPeak,nextSwitchMs,nextTransitions,periodBounds,displayBoundaries,isOffPeakAtDisplayMinute,displaySecondsOfDay,displaySegments,scheduleNote,longestOffPeakRunMin,stretchLabel,offsetLabel,minuteLabel,pickerOffsets,isKnownOffset,coerceOffset,getBaseOffset,getBaseLabel,setBaseOffset,fmtHM,fmtHMS,fmtDayHM,baseHM,utcHM,pad2,wrapDay,utcSecondsOfDay,PEAK_WINDOWS,BOUNDARIES,DAY_MIN,DEFAULT_OFFSET_MIN,MIN_OFFSET_MIN,MAX_OFFSET_MIN};")();
+const S = new Function(code + "\nreturn {isOffPeak,nextSwitchMs,nextTransitions,periodBounds,displayBoundaries,isOffPeakAtDisplayMinute,displaySecondsOfDay,displaySegments,scheduleNote,offsetLabel,minuteLabel,pickerOffsets,isKnownOffset,coerceOffset,getBaseOffset,getBaseLabel,setBaseOffset,fmtHM,fmtHMS,fmtDayHM,baseHM,utcHM,DEFAULT_OFFSET_MIN,DEFAULT_LABEL,MIN_OFFSET_MIN,MAX_OFFSET_MIN};")();
 
 let checks = 0;
 const failures = [];
@@ -205,11 +205,6 @@ ok(S.minuteLabel(555) === "09:15", "minuteLabel(555) = " + S.minuteLabel(555));
 ok(S.minuteLabel(1439) === "23:59", "minuteLabel(1439) = " + S.minuteLabel(1439));
 ok(S.minuteLabel(1440) === "24:00", "minuteLabel(1440) = " + S.minuteLabel(1440) + " (the day must close at 24:00)");
 
-// The stats row renders whole hours without a minutes part, and off-hour offsets with one.
-ok(S.stretchLabel(540) === "9h", "stretchLabel(540) = " + S.stretchLabel(540) + " want 9h (UTC+8 default)");
-ok(S.stretchLabel(900) === "15h", "stretchLabel(900) = " + S.stretchLabel(900) + " want 15h");
-ok(S.stretchLabel(885) === "14h 45m", "stretchLabel(885) = " + S.stretchLabel(885) + " want 14h 45m (UTC+13:45)");
-ok(S.stretchLabel(25) === "25m", "stretchLabel(25) = " + S.stretchLabel(25) + " want 25m");
 
 // 14. Picker data: every option is a real quarter-hour offset, unique and in range
 const pick = S.pickerOffsets();
@@ -283,24 +278,13 @@ for (const off of pick.map((p) => p[0])) {
   }
   ok(offMinutes === 1020, "offset " + off + ": " + offMinutes + " off-peak minutes (want 1020 = 17h)");
 
-  // The "longest off-peak run" stat must match a minute-by-minute sweep of the same local day.
-  let run = 0;
-  let longest = 0;
-  for (let m = 0; m < 1440; m++) {
-    if (expectedOffPeak(Date.UTC(2026, 0, 1) + (m - off) * 60000)) {
-      run++;
-      if (run > longest) longest = run;
-    } else run = 0;
-  }
-  ok(S.longestOffPeakRunMin(off) === longest, "offset " + off + ": longest off-peak run " + S.longestOffPeakRunMin(off) + " min, want " + longest);
-  // Measured across every offered offset the stat spans 7h30m (UTC+6:30) to 15h (UTC-10).
-  ok(longest >= 450 && longest <= 900, "offset " + off + ": longest run " + longest + " min outside the 7h30m..15h range");
-
-  // The footer sentence must describe exactly those segments.
+  // The footer sentence must describe exactly those segments, gathered by state.
   const note = S.scheduleNote(off);
-  // The sentence carries the windows only; the 17 h / 50% facts live in the stats row.
-  let wantNote = "Schedule (" + S.offsetLabel(off) + "): " +
-    segs.map((s) => (s.off ? "off-peak " : "peak ") + S.minuteLabel(s.start) + "\u2013" + S.minuteLabel(s.end)).join(", ") + ".";
+  const gather = (wantOff) => segs.filter((s) => s.off === wantOff)
+    .map((s) => S.minuteLabel(s.start) + "\u2013" + S.minuteLabel(s.end));
+  ok(gather(true).length > 0 && gather(false).length > 0, "offset " + off + ": a local day must contain both states");
+  let wantNote = "Schedule (" + S.offsetLabel(off) + "): off-peak " + gather(true).join(", ") +
+    "; peak " + gather(false).join(", ") + ".";
   ok(note === wantNote, "scheduleNote at offset " + off + ":\n    got  " + note + "\n    want " + wantNote);
 }
 
@@ -312,8 +296,6 @@ ok(html.includes('id="metaDesc"'), "index.html must keep the metaDesc hook");
 ok(html.includes('id="tzSelect"'), "index.html must keep the tzSelect hook");
 // Before the script runs the page must already read as UTC+8, stats row included.
 ok(html.includes('id="displayHeadline">Off-peak right now.<'), "index.html headline must ship as the UTC+8 default: " + (html.match(/id="displayHeadline">[^<]*/) || [""])[0]);
-ok(html.includes('id="statLongest">' + S.stretchLabel(S.longestOffPeakRunMin(480)) + "<"), "index.html longest-run stat must ship as " + S.stretchLabel(S.longestOffPeakRunMin(480)) + " (UTC+8 default), got " + (html.match(/id="statLongest">[^<]*/) || [""])[0]);
-ok(S.longestOffPeakRunMin(480) === 540, "the UTC+8 longest run must be 9h, got " + S.longestOffPeakRunMin(480) + " min");
 ok(S.setBaseOffset(480) === 480 && S.getBaseOffset() === 480, "the base must start section 16 at UTC+8");
 ok(S.setBaseOffset(900) === 480 && S.getBaseOffset() === 480, "setBaseOffset must ignore out-of-range offsets");
 ok(S.setBaseOffset(45) === 480 && S.getBaseOffset() === 480, "setBaseOffset must ignore made-up offsets");
