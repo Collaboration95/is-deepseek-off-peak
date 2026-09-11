@@ -298,9 +298,9 @@ for (const off of pick.map((p) => p[0])) {
 
   // The footer sentence must describe exactly those segments.
   const note = S.scheduleNote(off);
+  // The sentence carries the windows only; the 17 h / 50% facts live in the stats row.
   let wantNote = "Schedule (" + S.offsetLabel(off) + "): " +
-    segs.map((s) => (s.off ? "off-peak " : "peak ") + S.minuteLabel(s.start) + "\u2013" + S.minuteLabel(s.end)).join(", ") +
-    " \u2014 17 h per day at 50% off.";
+    segs.map((s) => (s.off ? "off-peak " : "peak ") + S.minuteLabel(s.start) + "\u2013" + S.minuteLabel(s.end)).join(", ") + ".";
   ok(note === wantNote, "scheduleNote at offset " + off + ":\n    got  " + note + "\n    want " + wantNote);
 }
 

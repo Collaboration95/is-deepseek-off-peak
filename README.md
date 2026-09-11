@@ -1,63 +1,29 @@
 # is-deepseek-off-peak
 
-A single-file site that shows whether DeepSeek API pricing is off-peak right now, with a live countdown to the next switch.
+A single page that shows whether DeepSeek API pricing is off-peak right now, with a live countdown to the next switch.
 
-Every displayed time follows the timezone picker, which starts at **UTC+8**. UTC is shown alongside for reference because DeepSeek defines the schedule in UTC.
+Off-peak is 50% off peak rates. Times follow the timezone picker, which starts at UTC+8; UTC is shown alongside.
 
-## Launch
+## Run it
 
-Open `index.html` in a browser (double-click it), or serve it:
+Open `index.html` in a browser. That is the whole page: one file, no build step, no dependencies, no network calls. To serve it over HTTP instead:
 
     python3 -m http.server 8000
 
-then visit http://localhost:8000. No build step, no dependencies, no network calls at runtime.
-
 ## Timezone picker
 
-The control in the header sets the display timezone as a plain UTC offset and re-times the whole page: the large clock, the countdown and switch line, the "your day at a glance" strip, the next-switch list and the schedule line in the footer.
+The control in the header sets the display timezone as a plain UTC offset and re-times everything on the page: both clocks, the countdown, the day strip, the next-switch list and the footer sentence.
 
 - every whole hour from UTC-12 to UTC+14
-- the real-world half-hour and quarter-hour zones: UTC-9:30, UTC-3:30, UTC+3:30, UTC+4:30, UTC+5:30, UTC+5:45, UTC+6:30, UTC+8:45, UTC+9:30, UTC+10:30, UTC+12:45, UTC+13:45
+- the real half-hour and quarter-hour zones: UTC-9:30, UTC-3:30, UTC+3:30, UTC+4:30, UTC+5:30, UTC+5:45, UTC+6:30, UTC+8:45, UTC+9:30, UTC+10:30, UTC+12:45, UTC+13:45
 
-The pick is remembered per browser (localStorage key `deepseek-off-peak:utc-offset`); an unrecognised or out-of-range value falls back to UTC+8. A constant offset is exact here because the schedule repeats daily and the offsets never carry DST.
+The pick is remembered in `localStorage` per browser, and anything unrecognised falls back to UTC+8. Changing the offset only moves where the local day starts; the price changes stay pinned to UTC.
 
-Changing the offset only moves where the local day starts. The price changes stay pinned to 01:00, 04:00, 06:00 and 10:00 UTC, so at UTC-10 for example the local day runs off-peak 00:00-15:00, peak 15:00-18:00, off-peak 18:00-20:00, peak 20:00-24:00.
+## Schedule
 
-## Design
+The schedule repeats every day, so it is the same in every timezone.
 
-Light "engineering paper" look: a warm off-white page carrying a hairline grid that fades out past the fold, near-black display type with tight tracking, monospace for every number, label and caption, and a single yellow accent for the picker.
-
-The whole page is built to fit one screen. Three bands — headline and controls, the countdown panel beside the day board, then the invariants and the schedule note — sit in a viewport-height grid, and every vertical measure is a token tied to viewport height, so a shorter window compresses the page instead of pushing the stats below the fold.
-
-| Token | Role |
-| --- | --- |
-| `--pad-y` | page padding, top and bottom |
-| `--gap-y` | space between the three bands, and the seam inside the phone panel |
-| `--pad-card` | inner padding of the two panels |
-| `--row-y` | inner padding of a next-switch row |
-| `--strip-h` | day strip thickness |
-| `--fs-display`, `--fs-count`, `--fs-lead` | headline, countdown and lede sizes |
-
-Below 860px the two panels fuse into one card, the lede and the UTC restatement drop out, and the rhythm tightens. Below 700px of height the countdown shrinks, the switch rows compress and the strip's axis is dropped; on a short phone the schedule recap goes too, since the strip, legend and switch list already state it. The attribution line always stays.
-
-| Element | How it is built |
-| --- | --- |
-| Paper grid | Two 1px `linear-gradient` layers at 46px intervals on `body::before`, dimmed by a `radial-gradient` mask so it fades toward the edges |
-| Warm wash | `body::after` with a white and a yellow-tinted radial gradient behind the headline |
-| Display type | Heavy system stack at `clamp(25px,min(4.2vw,5.4vh),44px)` with `letter-spacing:-.035em` and `line-height:1`, so it also shrinks on short windows |
-| Numerals | `font-variant-numeric:tabular-nums` everywhere a value changes, so the countdown never shifts sideways |
-| Framed board | White card with a yellow border, a 6px yellow halo ring and a warm drop shadow |
-| State colours | `body[data-state]` swaps a trio of semantic tokens (ink, soft background, border) that the dot, countdown, bar, chips and strip all read |
-
-The stats row states the invariants outright: 17h off-peak and 7h peak per day hold at every offset, and the longest unbroken off-peak run inside one local day ranges from 7h30m (UTC+6:30) to 15h (UTC-10).
-
-Type is set in system faces so the page still makes no network requests, which also keeps it fast where Google Fonts is slow or blocked. To match the reference more closely, drop a webfont in: `Inter Tight` for `--font-display` and `JetBrains Mono` for `--font-mono` are the closest free equivalents, and self-hosted `.woff2` files keep the offline guarantee.
-
-## Schedule it shows
-
-DeepSeek's schedule is identical every day. Off-peak is billed at 50% off peak rates.
-
-| UTC+8 window | UTC window | Billing |
+| UTC+8 | UTC | Billing |
 | --- | --- | --- |
 | 00:00-09:00 | 16:00-01:00 | Off-peak (50% off) |
 | 09:00-12:00 | 01:00-04:00 | Peak |
@@ -65,27 +31,14 @@ DeepSeek's schedule is identical every day. Off-peak is billed at 50% off peak r
 | 14:00-18:00 | 06:00-10:00 | Peak |
 | 18:00-24:00 | 10:00-16:00 | Off-peak (50% off) |
 
-That is 17 hours off-peak and 7 hours peak per day. The price changes on exact UTC instants, so in UTC+8 each day flips at 09:00, 12:00, 14:00 and 18:00.
+17 hours off-peak and 7 hours peak per day. Source: [DeepSeek API docs — Models & Pricing](https://api-docs.deepseek.com/quick_start/pricing/), effective 16 Aug 2026.
 
-Note that UTC+8 midnight is not a price change. The off-peak stretch from 18:00 to 09:00 is a single 15-hour billing window that spans it, which is why the progress bar runs 18:00 to 09:00 rather than resetting at midnight.
+## Layout
 
-Schedule source: DeepSeek API docs, Models & Pricing (https://api-docs.deepseek.com/quick_start/pricing/); this schedule took effect 16 Aug 2026.
+The page fits one screen: three bands in a viewport-height grid, with every vertical measure tied to viewport height so a short window compresses it rather than pushing content below the fold. Below 860px wide the two panels fuse into one card and the lede drops; on a short phone the headings, legend and captions around the strip stand down.
 
 ## Verify
 
     node verify.mjs
 
-Runs ~388k assertions that re-derive the schedule independently of the page code:
-
-- every second of a UTC day, plus every boundary instant at +/-1ms
-- a full month minute by minute (exactly 17h off-peak / 7h peak daily, weekends included)
-- the billing windows behind the progress bar, including the 15-hour window that crosses midnight
-- the default UTC+8 base: offset exactness, 09:00/12:00/14:00/18:00 flips, midnight rendering as 00:00, and weekday rollover
-- the picker: every offered offset is a unique quarter hour in range, offset labels render as UTC+5:30 / UTC-9:30 style, and the picker cannot be set to a non-existent zone
-- every offset the picker offers: clocks re-derived from a shifted UTC instant, the day strip checked against the UTC schedule every five minutes, and exactly 17h off-peak in each local day
-- the footer schedule sentence regenerated from the same segments, which is also asserted to match the text the page ships with
-- the longest-run stat against a minute-by-minute sweep of the same local day, per offset
-
-The results are identical under any host timezone (TZ=America/New_York node verify.mjs gives the same pass as TZ=UTC).
-
-A second, throwaway check measures the one-screen fit: it evaluates the rhythm tokens at fifteen viewports from 1512x982 down to 360x640, wraps the page's real strings against the resulting column widths, and fails if any viewport is short of room. At the time of writing the tightest case is 360x640 with 32px to spare.
+Runs ~388k assertions that re-derive the schedule independently of the page code: every second of a UTC day, every boundary instant, a full month minute by minute, the billing windows behind the progress bar, the picker's offsets and their labels, and a sweep over every offered offset that checks the clocks, day strip and footer text against the UTC schedule. Results are identical under any host timezone.
