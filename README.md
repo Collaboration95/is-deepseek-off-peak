@@ -27,13 +27,26 @@ Changing the offset only moves where the local day starts. The price changes sta
 
 Light "engineering paper" look: a warm off-white page carrying a hairline grid that fades out past the fold, near-black display type with tight tracking, monospace for every number, label and caption, and a single yellow accent for the picker.
 
+The whole page is built to fit one screen. Three bands — headline and controls, the countdown panel beside the day board, then the invariants and the schedule note — sit in a viewport-height grid, and every vertical measure is a token tied to viewport height, so a shorter window compresses the page instead of pushing the stats below the fold.
+
+| Token | Role |
+| --- | --- |
+| `--pad-y` | page padding, top and bottom |
+| `--gap-y` | space between the three bands, and the seam inside the phone panel |
+| `--pad-card` | inner padding of the two panels |
+| `--row-y` | inner padding of a next-switch row |
+| `--strip-h` | day strip thickness |
+| `--fs-display`, `--fs-count`, `--fs-lead` | headline, countdown and lede sizes |
+
+Below 860px the two panels fuse into one card, the lede and the UTC restatement drop out, and the rhythm tightens. Below 700px of height the countdown shrinks, the switch rows compress and the strip's axis is dropped; on a short phone the schedule recap goes too, since the strip, legend and switch list already state it. The attribution line always stays.
+
 | Element | How it is built |
 | --- | --- |
 | Paper grid | Two 1px `linear-gradient` layers at 46px intervals on `body::before`, dimmed by a `radial-gradient` mask so it fades toward the edges |
 | Warm wash | `body::after` with a white and a yellow-tinted radial gradient behind the headline |
-| Display type | Heavy system stack at `clamp(35px,7.2vw,58px)` with `letter-spacing:-.035em` and `line-height:0.99` |
+| Display type | Heavy system stack at `clamp(25px,min(4.2vw,5.4vh),44px)` with `letter-spacing:-.035em` and `line-height:1`, so it also shrinks on short windows |
 | Numerals | `font-variant-numeric:tabular-nums` everywhere a value changes, so the countdown never shifts sideways |
-| Framed board | White card with a yellow border, an 8px yellow halo ring and a warm drop shadow |
+| Framed board | White card with a yellow border, a 6px yellow halo ring and a warm drop shadow |
 | State colours | `body[data-state]` swaps a trio of semantic tokens (ink, soft background, border) that the dot, countdown, bar, chips and strip all read |
 
 The stats row states the invariants outright: 17h off-peak and 7h peak per day hold at every offset, and the longest unbroken off-peak run inside one local day ranges from 7h30m (UTC+6:30) to 15h (UTC-10).
@@ -74,3 +87,5 @@ Runs ~388k assertions that re-derive the schedule independently of the page code
 - the longest-run stat against a minute-by-minute sweep of the same local day, per offset
 
 The results are identical under any host timezone (TZ=America/New_York node verify.mjs gives the same pass as TZ=UTC).
+
+A second, throwaway check measures the one-screen fit: it evaluates the rhythm tokens at fifteen viewports from 1512x982 down to 360x640, wraps the page's real strings against the resulting column widths, and fails if any viewport is short of room. At the time of writing the tightest case is 360x640 with 32px to spare.

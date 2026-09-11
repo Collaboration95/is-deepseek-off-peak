@@ -18,19 +18,31 @@
     --peak:#9A5408; --peak-soft:#FDF1DE; --peak-line:#F0D6AC; --peak-fill:#F3D199;
     --font-display:"Inter Tight","Inter",-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     --font-mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,"JetBrains Mono","Roboto Mono",Consolas,monospace;
-    --wrap:768px;
+
+    /* One-screen rhythm. Every vertical measure below is tied to viewport height, so a
+       short window compresses the page instead of pushing the footer out of sight.
+       The layout budget in the README is derived from these tokens. */
+    --pad-y:clamp(12px,2.3vh,30px);      /* page padding, top and bottom        */
+    --gap-y:clamp(9px,1.8vh,20px);       /* space between the three page bands  */
+    --pad-card:clamp(12px,2vh,22px);     /* inner padding of the two panels     */
+    --row-y:clamp(6px,1.1vh,10px);       /* inner padding of a switch row       */
+    --strip-h:clamp(13px,1.9vh,18px);    /* day strip thickness                 */
+    --fs-display:clamp(25px,min(4.2vw,5.4vh),44px);
+    --fs-count:clamp(32px,min(8vw,9.2vh),64px);
+    --fs-lead:clamp(12.5px,1.7vh,14px);
+    --radius:18px;
   }
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
   body{
-    margin:0;min-height:100vh;background:var(--paper);color:var(--ink);
-    font:400 16px/1.55 var(--font-display);
+    margin:0;min-height:100vh;min-height:100dvh;background:var(--paper);color:var(--ink);
+    font-family:var(--font-display);font-size:15.5px;line-height:1.5;
     -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
   }
   body[data-state="off"]{--state:var(--off);--state-soft:var(--off-soft);--state-line:var(--off-line)}
   body[data-state="peak"]{--state:var(--peak);--state-soft:var(--peak-soft);--state-line:var(--peak-line)}
 
-  /* Hairline engineering paper that fades past the fold, with a warm wash behind the headline. */
+  /* Hairline engineering paper, fixed to the viewport so it never scrolls away. */
   body::before{
     content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
     background-image:
@@ -44,106 +56,166 @@
     content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
     background:
       radial-gradient(720px 380px at 50% -6%,#FFFFFF 0%,rgba(255,255,255,0) 74%),
-      radial-gradient(560px 320px at 50% 5%,rgba(255,214,77,.18),rgba(255,214,77,0) 76%);
+      radial-gradient(560px 320px at 50% 4%,rgba(255,214,77,.16),rgba(255,214,77,0) 76%);
   }
 
-  .page{position:relative;z-index:1;width:min(var(--wrap),100%);margin:0 auto;
-    padding:clamp(44px,7.5vw,92px) 22px clamp(40px,6vw,64px)}
+  .page{
+    position:relative;z-index:1;width:min(1040px,100%);margin:0 auto;
+    min-height:100vh;min-height:100dvh;
+    padding:var(--pad-y) clamp(16px,3vw,30px);
+    display:grid;align-content:center;gap:var(--gap-y);
+  }
 
-  .hero{text-align:center;display:flex;flex-direction:column;align-items:center}
-  .eyebrow{display:inline-flex;align-items:center;gap:9px;margin:0 0 20px;
-    font:600 11.5px/1 var(--font-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  /* ---- band 1: headline and controls, side by side on a laptop ---- */
+  .hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:clamp(12px,2.6vw,36px);align-items:center}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;margin:0 0 9px;
+    font-family:var(--font-mono);font-size:11px;font-weight:600;line-height:1;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
   .dot{width:7px;height:7px;border-radius:50%;background:var(--state);box-shadow:0 0 0 4px var(--state-soft)}
-  /* 20ch holds "Off-peak right now." on one line at full size, so flipping to the
-     shorter peak headline does not reflow the hero. */
-  .display{margin:0;max-width:20ch;font:800 clamp(35px,7.2vw,58px)/0.99 var(--font-display);
-    letter-spacing:-.035em;color:var(--ink)}
-  .lede{margin:20px 0 0;max-width:54ch;font:400 14.5px/1.65 var(--font-mono);color:var(--ink-2)}
+  .display{margin:0;font-family:var(--font-display);font-weight:800;font-size:var(--fs-display);
+    line-height:1;letter-spacing:-.035em;color:var(--ink);max-width:20ch}
+  .lede{margin:9px 0 0;max-width:52ch;font-family:var(--font-mono);font-size:var(--fs-lead);
+    line-height:1.5;color:var(--ink-2)}
   .lede span{color:var(--ink);font-weight:600}
 
-  .picker{margin:30px 0 0;display:flex;flex-direction:column;align-items:center;gap:10px}
-  .micro{margin:0;font:600 11px/1.4 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .hero-ctl{display:flex;flex-direction:column;align-items:flex-end;gap:clamp(7px,1.3vh,12px)}
+  .picker{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+  .micro{margin:0;font-family:var(--font-mono);font-size:11px;font-weight:600;line-height:1.3;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
   #tzSelect{
     -webkit-appearance:none;appearance:none;cursor:pointer;
-    background:var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23141310' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 15px center;
+    background:var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23141310' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 14px center;
     background-size:11px 8px;
     color:#17140B;border:1px solid var(--accent-deep);border-radius:12px;
-    padding:12px 42px 12px 18px;
-    font:700 14.5px/1 var(--font-mono);letter-spacing:.01em;
-    box-shadow:0 1px 0 rgba(20,19,16,.05),0 14px 26px -14px rgba(217,163,3,.9);
+    padding:clamp(8px,1.3vh,12px) 40px clamp(8px,1.3vh,12px) 16px;
+    font-family:var(--font-mono);font-size:14px;font-weight:700;line-height:1;
+    box-shadow:0 1px 0 rgba(20,19,16,.05),0 12px 22px -14px rgba(217,163,3,.9);
     transition:box-shadow .14s ease;
   }
-  #tzSelect:hover{box-shadow:0 1px 0 rgba(20,19,16,.05),0 18px 32px -14px rgba(217,163,3,1)}
+  #tzSelect:hover{box-shadow:0 1px 0 rgba(20,19,16,.05),0 16px 28px -14px rgba(217,163,3,1)}
   #tzSelect:focus-visible{outline:3px solid rgba(217,163,3,.45);outline-offset:2px}
-  #tzSelect option,#tzSelect optgroup{background:#FFFFFF;color:var(--ink);font:500 14px/1.6 var(--font-mono)}
+  #tzSelect option,#tzSelect optgroup{background:#FFFFFF;color:var(--ink);font-family:var(--font-mono);font-size:14px;font-weight:500}
 
-  .clockline{margin:26px 0 0;display:flex;align-items:baseline;justify-content:center;gap:12px;
-    font:500 12.5px/1 var(--font-mono);color:var(--muted);font-variant-numeric:tabular-nums}
-  .clockline b{font:600 15px/1 var(--font-mono);color:var(--ink-2)}
+  .clockline{margin:0;display:flex;align-items:baseline;gap:10px;font-family:var(--font-mono);
+    font-size:12px;font-weight:500;line-height:1;color:var(--muted);font-variant-numeric:tabular-nums}
+  .clockline b{font-size:14px;font-weight:600;color:var(--ink-2)}
   .clockline .pri b{color:var(--ink)}
   .unit{margin-left:6px}
+  .sep{color:var(--line)}
 
-  .count{margin:clamp(44px,7vw,64px) 0 0;text-align:center}
-  .cd{display:flex;align-items:baseline;justify-content:center;gap:10px;flex-wrap:wrap;margin:12px 0 0}
-  .cd-big{font:800 clamp(46px,12vw,80px)/1 var(--font-display);letter-spacing:-.045em;
-    color:var(--state);font-variant-numeric:tabular-nums}
-  .cd-sec{font:700 clamp(17px,4.2vw,24px)/1 var(--font-mono);color:var(--muted);font-variant-numeric:tabular-nums}
-  .switchline{margin:15px 0 0;font:500 13.5px/1.5 var(--font-mono);color:var(--ink-2);font-variant-numeric:tabular-nums}
-  .bar{height:7px;max-width:520px;margin:22px auto 0;border:1px solid var(--line);border-radius:999px;
-    background:var(--well);overflow:hidden}
+  /* ---- band 2: the countdown panel next to the day board ---- */
+  .main{display:grid;grid-template-columns:minmax(0,0.92fr) minmax(0,1.08fr);gap:clamp(11px,1.7vw,18px);align-items:stretch}
+  .count{display:flex;flex-direction:column;justify-content:center;background:var(--card);
+    border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad-card);
+    box-shadow:0 2px 4px rgba(20,19,16,.02)}
+  .cd{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin:7px 0 0}
+  .cd-big{font-family:var(--font-display);font-weight:800;font-size:var(--fs-count);line-height:1;
+    letter-spacing:-.045em;color:var(--state);font-variant-numeric:tabular-nums}
+  .cd-sec{font-family:var(--font-mono);font-size:clamp(14px,1.9vh,20px);font-weight:700;line-height:1;
+    color:var(--muted);font-variant-numeric:tabular-nums}
+  .switchline{margin:clamp(8px,1.4vh,14px) 0 0;font-family:var(--font-mono);font-size:13px;
+    line-height:1.45;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .bar{height:6px;border:1px solid var(--line);border-radius:999px;background:var(--well);
+    overflow:hidden;margin-top:clamp(9px,1.5vh,15px)}
   .bar i{display:block;height:100%;width:0;border-radius:999px;background:var(--state);transition:width .25s linear}
-  .meta{margin:11px 0 0;font:500 12.5px/1.5 var(--font-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+  .meta{margin:clamp(6px,1vh,10px) 0 0;font-family:var(--font-mono);font-size:12px;line-height:1.4;
+    color:var(--muted);font-variant-numeric:tabular-nums}
 
-  /* The framed board, haloed like a product screenshot set down on the page. */
-  .board{margin:clamp(46px,7vw,70px) 0 0;background:var(--card);border:1px solid var(--accent-line);
-    border-radius:24px;padding:clamp(20px,4vw,30px);
-    box-shadow:0 0 0 8px var(--accent-halo),0 34px 60px -34px rgba(196,156,20,.5),0 2px 4px rgba(20,19,16,.03)}
-  .board-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:16px}
-  h2{margin:0;font:600 11px/1.4 var(--font-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .board{background:var(--card);border:1px solid var(--accent-line);border-radius:var(--radius);
+    padding:var(--pad-card);
+    box-shadow:0 0 0 6px var(--accent-halo),0 22px 40px -30px rgba(196,156,20,.55)}
+  .board-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  h2{margin:0;font-family:var(--font-mono);font-size:11px;font-weight:600;line-height:1.4;
+    letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
   .tz{color:var(--ink-2);letter-spacing:.06em}
-  .legend{display:flex;gap:16px;font:500 11px/1 var(--font-mono);letter-spacing:.04em;color:var(--muted);text-transform:uppercase}
-  .legend i{display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:7px;vertical-align:middle}
+  .legend{display:flex;gap:14px;font-family:var(--font-mono);font-size:10.5px;font-weight:500;line-height:1;
+    letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+  .legend i{display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:6px;vertical-align:middle}
   .legend i.off{background:var(--off-fill)}
   .legend i.peak{background:var(--peak-fill)}
-  .strip{position:relative;height:18px;border:1px solid var(--line);border-radius:9px;background:var(--well);overflow:hidden}
+  .strip{position:relative;height:var(--strip-h);border:1px solid var(--line);border-radius:9px;
+    background:var(--well);overflow:hidden;margin-top:clamp(8px,1.4vh,13px)}
   .seg{position:absolute;top:0;bottom:0}
   .seg.off{background:var(--off-fill)}
   .seg.peak{background:var(--peak-fill)}
   .marker{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink);border-radius:2px;z-index:3;
     transform:translateX(-1px);box-shadow:0 0 0 3px rgba(255,255,255,.9)}
-  .ticks{position:relative;height:15px;margin-top:8px;font:500 10.5px/1 var(--font-mono);
-    color:var(--muted);font-variant-numeric:tabular-nums}
+  .ticks{position:relative;height:14px;margin-top:6px;font-family:var(--font-mono);font-size:10.5px;
+    font-weight:500;line-height:1;color:var(--muted);font-variant-numeric:tabular-nums}
   .ticks span{position:absolute;top:0}
-  .rule{margin:22px 0 18px;border:0;border-top:1px solid var(--hair)}
+  .rule{margin:clamp(10px,1.6vh,16px) 0 clamp(9px,1.4vh,14px);border:0;border-top:1px solid var(--hair)}
 
-  ul#nextList{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:8px}
-  ul#nextList li{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid var(--hair);
-    border-radius:12px;background:#FCFBF8;font:500 13.5px/1 var(--font-mono);font-variant-numeric:tabular-nums}
+  ul#nextList{list-style:none;margin:clamp(8px,1.3vh,12px) 0 0;padding:0;display:grid;gap:6px}
+  ul#nextList li{display:flex;align-items:center;gap:9px;padding:var(--row-y) 12px;
+    border:1px solid var(--hair);border-radius:11px;background:#FCFBF8;
+    font-family:var(--font-mono);font-size:13px;font-weight:500;line-height:1.2;
+    font-variant-numeric:tabular-nums}
   ul#nextList .t{font-weight:700;color:var(--ink)}
   ul#nextList .z{color:var(--muted);font-size:12px}
-  ul#nextList .to{margin-left:auto;display:inline-flex;align-items:center;gap:7px;padding:4px 10px;
-    border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.02em;white-space:nowrap}
+  ul#nextList .to{margin-left:auto;display:inline-flex;align-items:center;gap:6px;
+    padding:3px 9px;border-radius:999px;font-size:10.5px;font-weight:600;letter-spacing:.02em;white-space:nowrap}
   ul#nextList .to::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
   .to.off{color:var(--off);background:var(--off-soft);border:1px solid var(--off-line)}
   .to.peak{color:var(--peak);background:var(--peak-soft);border:1px solid var(--peak-line)}
 
-  .stats{margin:clamp(40px,6vw,58px) 0 0;padding-top:26px;border-top:1px solid var(--line);
-    display:grid;grid-template-columns:repeat(4,1fr);gap:22px 14px;text-align:center}
-  .stat b{display:block;font:800 clamp(22px,4.6vw,30px)/1 var(--font-display);letter-spacing:-.03em;
+  /* ---- band 3: invariants, then the schedule note ---- */
+  .foot{display:grid;gap:clamp(6px,1vh,10px)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 10px;text-align:center;
+    padding-top:clamp(10px,1.6vh,16px);border-top:1px solid var(--line)}
+  .stat b{display:block;font-family:var(--font-display);font-weight:800;
+    font-size:clamp(19px,min(3.4vw,3.6vh),28px);line-height:1;letter-spacing:-.03em;
     color:var(--ink);font-variant-numeric:tabular-nums}
-  .stat span{display:block;margin-top:9px;font:500 10.5px/1.45 var(--font-mono);
-    letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+  .stat span{display:block;margin-top:6px;font-family:var(--font-mono);font-size:10.5px;
+    font-weight:500;line-height:1.35;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  #scheduleNote,.fine{margin:0;font-family:var(--font-mono);font-size:11.5px;line-height:1.55;color:var(--muted)}
+  .fine a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--accent-deep);text-underline-offset:3px}
 
-  footer{margin-top:clamp(34px,6vw,52px);padding-top:20px;border-top:1px solid var(--line);
-    font:500 12px/1.7 var(--font-mono);color:var(--muted)}
-  footer p{margin:0 0 8px}
-  footer p:last-child{margin-bottom:0}
-  footer a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--accent-deep);text-underline-offset:3px}
-
+  @media (max-width:860px){
+    /* Phones get one panel instead of two cards, a tighter rhythm and no duplicate lede. */
+    :root{
+      --pad-y:clamp(10px,1.8vh,22px);
+      --gap-y:clamp(8px,1.4vh,14px);
+      --pad-card:clamp(11px,1.5vh,16px);
+      --row-y:clamp(4px,0.9vh,7px);
+      --strip-h:clamp(12px,1.7vh,16px);
+      --fs-display:clamp(22px,6.4vw,34px);
+      --fs-count:clamp(28px,min(9vw,7.6vh),56px);
+    }
+    .hero{grid-template-columns:1fr;justify-items:center;text-align:center}
+    .hero-ctl{align-items:center}
+    .picker{align-items:center}
+    .lede{display:none}
+    .utcnote{display:none}
+    .main{grid-template-columns:1fr;background:var(--card);border:1px solid var(--accent-line);
+      border-radius:var(--radius);padding:var(--pad-card);
+      box-shadow:0 0 0 6px var(--accent-halo),0 22px 40px -30px rgba(196,156,20,.55)}
+    .count,.board{background:none;border:0;border-radius:0;box-shadow:none;padding:0}
+    .count{padding-bottom:var(--gap-y);border-bottom:1px solid var(--hair);margin-bottom:var(--gap-y)}
+    ul#nextList li{font-size:12.5px;padding:var(--row-y) 10px}
+    h2,.legend{text-align:left}
+  }
+  @media (max-width:660px){
+    /* The strip is too small for an axis to read at this width. */
+    .ticks{display:none}
+  }
   @media (max-width:560px){
-    .stats{grid-template-columns:repeat(2,1fr);gap:20px 12px}
-    .legend{font-size:10.5px;gap:12px}
-    .board-head{align-items:flex-start;flex-direction:column}
+    .board-head{align-items:flex-start;flex-direction:column;gap:6px}
+    .stats{gap:6px 6px}
+    .stat span{font-size:9.5px;letter-spacing:.04em}
+    .legend{font-size:10px;gap:10px}
+  }
+  @media (max-height:700px){
+    /* Short windows: keep the attribution, drop the UTC restatement and the axis, and
+       tighten the two blocks that dominate the height. */
+    :root{--fs-count:clamp(26px,min(8vw,7vh),56px)}
+    ul#nextList li{padding:3px 10px;font-size:12px}
+    .rule{margin:8px 0}
+    .utcnote{display:none}
+    .ticks{display:none}
+  }
+  @media (max-height:700px) and (max-width:860px){
+    /* On a short phone the strip, legend and switch list already state the schedule. */
+    #scheduleNote{display:none}
   }
   @media (prefers-reduced-motion:reduce){.bar i{transition:none}#tzSelect{transition:none}}
 </style>
@@ -152,53 +224,58 @@
 <main class="page">
 
   <header class="hero">
-    <p class="eyebrow"><i class="dot"></i>DeepSeek API pricing, live</p>
-    <h1 class="display" id="displayHeadline">Off-peak right now.</h1>
-    <p class="lede">Off-peak is 50% off peak rates. Every time on this page follows <span data-tz-name>UTC+8</span>; the schedule itself is fixed in UTC.</p>
-    <div class="picker">
-      <label class="micro" for="tzSelect">Display timezone</label>
-      <select id="tzSelect"></select>
+    <div class="hero-text">
+      <p class="eyebrow"><i class="dot"></i>DeepSeek API pricing, live</p>
+      <h1 class="display" id="displayHeadline">Off-peak right now.</h1>
+      <p class="lede">Off-peak is 50% off peak rates. Every time below follows <span data-tz-name>UTC+8</span>; the schedule itself is fixed in UTC.</p>
     </div>
-    <p class="clockline">
-      <span class="clock pri"><b id="clockBase">--:--:--</b><span class="unit" id="clockBaseLabel">UTC+8</span></span>
-      <span class="clock-sep">/</span>
-      <span class="clock"><b id="clockUTC">--:--:--</b><span class="unit">UTC</span></span>
-    </p>
+    <div class="hero-ctl">
+      <div class="picker">
+        <label class="micro" for="tzSelect">Display timezone</label>
+        <select id="tzSelect"></select>
+      </div>
+      <p class="clockline">
+        <span class="clock pri"><b id="clockBase">--:--:--</b><span class="unit" id="clockBaseLabel">UTC+8</span></span>
+        <span class="sep">/</span>
+        <span class="clock"><b id="clockUTC">--:--:--</b><span class="unit">UTC</span></span>
+      </p>
+    </div>
   </header>
 
-  <section class="count">
-    <p class="micro" id="cdLabel">Off-peak ends in</p>
-    <p class="cd"><span class="cd-big" id="cdValue">--h --m</span><span class="cd-sec" id="cdSecs">--s</span></p>
-    <p class="switchline" id="switchLine"></p>
-    <div class="bar" role="presentation"><i id="bar"></i></div>
-    <p class="meta" id="barLabel">Progress through the current pricing window</p>
-  </section>
+  <div class="main">
+    <section class="count">
+      <p class="micro" id="cdLabel">Off-peak ends in</p>
+      <p class="cd"><span class="cd-big" id="cdValue">--h --m</span><span class="cd-sec" id="cdSecs">--s</span></p>
+      <p class="switchline" id="switchLine"></p>
+      <div class="bar" role="presentation"><i id="bar"></i></div>
+      <p class="meta" id="barLabel">Progress through the current pricing window</p>
+    </section>
 
-  <section class="board">
-    <div class="board-head">
-      <h2>Your day at a glance <span class="tz" data-tz>(UTC+8)</span></h2>
-      <div class="legend">
-        <span><i class="off"></i>Off-peak · 50% off</span>
-        <span><i class="peak"></i>Peak · full price</span>
+    <section class="board">
+      <div class="board-head">
+        <h2>Your day at a glance <span class="tz" data-tz>(UTC+8)</span></h2>
+        <div class="legend">
+          <span><i class="off"></i>Off-peak · 50% off</span>
+          <span><i class="peak"></i>Peak · full price</span>
+        </div>
       </div>
-    </div>
-    <div class="strip" id="strip"><span class="marker" id="marker"></span></div>
-    <div class="ticks" id="ticks"></div>
-    <hr class="rule">
-    <h2>Next switches <span class="tz" data-tz>(UTC+8)</span></h2>
-    <ul id="nextList"></ul>
-  </section>
+      <div class="strip" id="strip"><span class="marker" id="marker"></span></div>
+      <div class="ticks" id="ticks"></div>
+      <hr class="rule">
+      <h2>Next switches <span class="tz" data-tz>(UTC+8)</span></h2>
+      <ul id="nextList"></ul>
+    </section>
+  </div>
 
-  <section class="stats">
-    <div class="stat"><b>17h</b><span>Off-peak per day</span></div>
-    <div class="stat"><b>7h</b><span>Peak per day</span></div>
-    <div class="stat"><b>50%</b><span>Off peak rates</span></div>
-    <div class="stat"><b id="statLongest">9h</b><span>Longest off-peak run</span></div>
-  </section>
-
-  <footer>
+  <footer class="foot">
+    <section class="stats">
+      <div class="stat"><b>17h</b><span>Off-peak per day</span></div>
+      <div class="stat"><b>7h</b><span>Peak per day</span></div>
+      <div class="stat"><b>50%</b><span>Off peak rates</span></div>
+      <div class="stat"><b id="statLongest">9h</b><span>Longest off-peak run</span></div>
+    </section>
     <p id="scheduleNote">Schedule (UTC+8): off-peak 00:00–09:00, peak 09:00–12:00, off-peak 12:00–14:00, peak 14:00–18:00, off-peak 18:00–24:00 — 17 h per day at 50% off.</p>
-    <p>Same schedule in UTC: peak 01:00–04:00 and 06:00–10:00, off-peak all other hours. <a href="https://api-docs.deepseek.com/quick_start/pricing/" target="_blank" rel="noreferrer">DeepSeek API docs — Models &amp; Pricing</a>; effective 16 Aug 2026.</p>
+    <p class="fine"><span class="utcnote">Same schedule in UTC: peak 01:00–04:00 and 06:00–10:00, off-peak all other hours. </span><a href="https://api-docs.deepseek.com/quick_start/pricing/" target="_blank" rel="noreferrer">DeepSeek API docs — Models &amp; Pricing</a>; effective 16 Aug 2026.</p>
   </footer>
 
 </main>
