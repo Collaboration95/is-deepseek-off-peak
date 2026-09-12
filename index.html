@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Is DeepSeek off-peak right now? (UTC+8)</title>
-<meta name="description" id="metaDesc" content="Live DeepSeek off-peak pricing status in UTC+8 with a countdown to the next switch. Off-peak is 50% off peak rates.">
+<meta name="description" id="metaDesc" content="Live DeepSeek off-peak pricing status in UTC+8 with a countdown to the next switch. Off-peak is half price; peak windows run on weekdays only.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Is DeepSeek off-peak right now?">
-<meta property="og:description" content="Live DeepSeek off-peak pricing status with a countdown to the next switch. Off-peak is 50% off peak rates.">
+<meta property="og:description" content="Live DeepSeek off-peak pricing status with a countdown to the next switch. Off-peak is half price; peak windows run Monday through Friday only.">
 <meta name="twitter:card" content="summary">
 <style>
   :root{
@@ -251,7 +251,7 @@
     <div class="hero-text">
       <p class="eyebrow"><i class="dot"></i>DeepSeek API pricing, live</p>
       <h1 class="display" id="displayHeadline">Off-peak right now.</h1>
-      <p class="lede">Off-peak is 50% off peak rates. Every time below follows <span data-tz-name>UTC+8</span>; the schedule itself is fixed in UTC.</p>
+      <p class="lede">Off-peak is half price. Peak runs 01:00–04:00 and 06:00–10:00 UTC, Monday–Friday; weekends are all off-peak. Every time below follows <span data-tz-name>UTC+8</span>.</p>
     </div>
     <div class="hero-ctl">
       <div class="picker">
@@ -292,8 +292,8 @@
   </div>
 
   <footer class="foot">
-    <p id="scheduleNote">Schedule (UTC+8): off-peak 00:00–09:00, 12:00–14:00, 18:00–24:00; peak 09:00–12:00, 14:00–18:00.</p>
-    <p class="fine"><span class="utcnote">Peak UTC hours: 01:00–04:00 and 06:00–10:00. </span><a href="https://api-docs.deepseek.com/quick_start/pricing/" target="_blank" rel="noreferrer">DeepSeek API docs — Models &amp; Pricing</a>, effective 16 Aug 2026.</p>
+    <p id="scheduleNote">Weekdays: peak 01:00–04:00 and 06:00–10:00 UTC; all other hours are off-peak. Weekends are fully off-peak.</p>
+    <p class="fine"><span class="utcnote">Peak UTC hours: 01:00–04:00 and 06:00–10:00, Monday–Friday only; weekends are fully off-peak. </span><a href="https://api-docs.deepseek.com/quick_start/pricing/" target="_blank" rel="noreferrer">DeepSeek API docs — Models &amp; Pricing</a>, effective 16 Aug 2026.</p>
   </footer>
 
 </main>
@@ -302,9 +302,9 @@
   "use strict";
 
   // ===== SCHEDULE-LOGIC-START =====
-  // DeepSeek peak/off-peak billing schedule. It is defined by DeepSeek in UTC and is
-  // identical every day: peak 01:00-04:00 and 06:00-10:00 UTC, off-peak all other hours
-  // (17 h/day) at 50% off peak rates.
+  // DeepSeek peak/off-peak billing schedule. It is defined by DeepSeek in UTC:
+  // weekdays peak 01:00-04:00 and 06:00-10:00 UTC, while weekends are fully off-peak.
+  // Off-peak rates are half of peak rates.
   var DAY_MIN = 1440;
   var PEAK_WINDOWS = [[60, 240], [360, 600]]; // UTC day-minutes, [start, end)
   // Price-change instants, derived from the windows so the two cannot drift apart.
@@ -387,7 +387,28 @@
     return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
   }
 
+  function utcDayOfWeek(ms) { return new Date(ms).getUTCDay(); }
+  function isWeekend(ms) {
+    var day = utcDayOfWeek(ms);
+    return day === 0 || day === 6;
+  }
+
+  // The display day is a calendar day in the selected fixed-offset timezone. Its
+  // midnight is represented as a UTC instant so weekday rules stay independent of
+  // the host timezone and daylight-saving rules.
+  function displayDayStartMs(offsetMin, referenceMs) {
+    var ref = typeof referenceMs === "number" ? referenceMs : Date.now();
+    var shifted = new Date(ref + offsetMin * 60000);
+    return Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate()) - offsetMin * 60000;
+  }
+
+  function displayDayLabel(offsetMin, referenceMs) {
+    var start = displayDayStartMs(offsetMin, referenceMs);
+    return WEEKDAYS[utcDayOfWeek(start + offsetMin * 60000)];
+  }
+
   function isOffPeak(ms) {
+    if (isWeekend(ms)) return true;
     var sec = utcSecondsOfDay(ms);
     for (var i = 0; i < PEAK_WINDOWS.length; i++) {
       var start = PEAK_WINDOWS[i][0] * 60000;
@@ -398,26 +419,43 @@
   }
 
   function nextSwitchMs(ms) {
-    var sec = utcSecondsOfDay(ms);
     var midnight = utcMidnightMs(ms);
-    for (var i = 0; i < BOUNDARIES.length; i++) {
-      var b = BOUNDARIES[i] * 60000;
-      if (sec < b) return midnight + b;
+    var day = utcDayOfWeek(ms);
+    var sec = utcSecondsOfDay(ms);
+
+    // Walk at most one week forward. This handles the long Friday-to-Monday
+    // off-peak window without inventing weekend price changes.
+    for (var dayOffset = 0; dayOffset <= 7; dayOffset++) {
+      var candidateMidnight = midnight + dayOffset * DAY_MIN * 60000;
+      var candidateDay = (day + dayOffset) % 7;
+      if (candidateDay === 0 || candidateDay === 6) continue;
+      for (var i = 0; i < BOUNDARIES.length; i++) {
+        var b = candidateMidnight + BOUNDARIES[i] * 60000;
+        if (b > ms && (dayOffset > 0 || BOUNDARIES[i] * 60000 > sec)) return b;
+      }
     }
-    return midnight + DAY_MIN * 60000 + BOUNDARIES[0] * 60000;
+    // The loop always finds a weekday boundary, but keep a safe fallback if the
+    // schedule is edited to remove all boundaries in the future.
+    return midnight + 7 * DAY_MIN * 60000 + BOUNDARIES[0] * 60000;
   }
 
   function periodBounds(ms) {
-    // Bounds of the billing window containing ms. The 10:00-01:00 UTC window crosses
-    // UTC midnight, so the start is the most recent boundary instant at or before ms.
+    // Bounds of the billing window containing ms. Weekends belong to one long
+    // off-peak window that starts at Friday 10:00 UTC and ends Monday 01:00 UTC.
     var midnight = utcMidnightMs(ms);
+    var day = utcDayOfWeek(ms);
     var start = null;
-    for (var i = BOUNDARIES.length - 1; i >= 0; i--) {
-      var b = midnight + BOUNDARIES[i] * 60000;
-      if (b <= ms) { start = b; break; }
+    for (var dayOffset = 0; dayOffset <= 7 && start === null; dayOffset++) {
+      var candidateMidnight = midnight - dayOffset * DAY_MIN * 60000;
+      var candidateDay = (day - dayOffset + 14) % 7;
+      if (candidateDay === 0 || candidateDay === 6) continue;
+      for (var i = BOUNDARIES.length - 1; i >= 0; i--) {
+        var b = candidateMidnight + BOUNDARIES[i] * 60000;
+        if (b <= ms) { start = b; break; }
+      }
     }
     if (start === null) {
-      // Between 00:00 and 01:00 UTC the current window began at 10:00 UTC the previous day.
+      // This fallback is only reachable if the published boundary list is empty.
       start = midnight - DAY_MIN * 60000 + BOUNDARIES[BOUNDARIES.length - 1] * 60000;
     }
     return { start: start, end: nextSwitchMs(ms) };
@@ -434,19 +472,28 @@
     return out;
   }
 
-  // Price-change instants expressed as minutes into the base-offset day, ascending.
-  function displayBoundaries(offsetMin) {
+  // Price-change instants expressed as minutes into the selected local day,
+  // ascending. The local day matters because weekends have no peak windows.
+  function displayBoundaries(offsetMin, referenceMs) {
     var out = [];
-    for (var i = 0; i < BOUNDARIES.length; i++) {
-      var v = wrapDay(BOUNDARIES[i] + offsetMin);
-      if (out.indexOf(v) < 0) out.push(v);
+    var dayStart = displayDayStartMs(offsetMin, referenceMs);
+    var dayEnd = dayStart + DAY_MIN * 60000;
+    var cursor = dayStart - 1;
+    for (var i = 0; i < 8; i++) {
+      var t = nextSwitchMs(cursor);
+      if (t >= dayEnd) break;
+      if (t >= dayStart) {
+        var v = Math.round((t - dayStart) / 60000);
+        if (out.indexOf(v) < 0) out.push(v);
+      }
+      cursor = t;
     }
     return out.sort(function (a, b) { return a - b; });
   }
 
   // State at a given minute of the base-offset day, resolved via the UTC schedule.
-  function isOffPeakAtDisplayMinute(min, offsetMin) {
-    return isOffPeak(Date.UTC(2026, 0, 1) + (min - offsetMin) * 60000);
+  function isOffPeakAtDisplayMinute(min, offsetMin, referenceMs) {
+    return isOffPeak(displayDayStartMs(offsetMin, referenceMs) + min * 60000);
   }
 
   function displaySecondsOfDay(ms, offsetMin) {
@@ -455,30 +502,34 @@
 
   // Contiguous runs of constant pricing state across the display day, used for the
   // schedule line in the footer and for the day strip.
-  function displaySegments(offsetMin) {
+  function displaySegments(offsetMin, referenceMs) {
     var out = [];
-    var bounds = [0].concat(displayBoundaries(offsetMin), [DAY_MIN]);
+    var bounds = [0].concat(displayBoundaries(offsetMin, referenceMs), [DAY_MIN]);
     for (var i = 0; i < bounds.length - 1; i++) {
       var a = bounds[i];
       var b = bounds[i + 1];
       if (b <= a) continue;
-      out.push({ start: a, end: b, off: isOffPeakAtDisplayMinute(Math.floor((a + b) / 2), offsetMin) });
+      out.push({ start: a, end: b, off: isOffPeakAtDisplayMinute(Math.floor((a + b) / 2), offsetMin, referenceMs) });
     }
     return out;
   }
 
   // Footer sentence for a given offset, gathered by state rather than listed in clock
-  // order: "Schedule (UTC+8): off-peak 00:00-09:00, 12:00-14:00, 18:00-24:00; peak ...".
-  // Grouping says each range once and keeps the sentence short enough to hold one row.
-  function scheduleNote(offsetMin) {
-    var segs = displaySegments(offsetMin);
+  // order. The selected local weekday is included because weekends have a different
+  // schedule from weekdays.
+  function scheduleNote(offsetMin, referenceMs) {
+    var segs = displaySegments(offsetMin, referenceMs);
     var off = [];
     var peak = [];
     for (var i = 0; i < segs.length; i++) {
       var run = minuteLabel(segs[i].start) + "\u2013" + minuteLabel(segs[i].end);
       (segs[i].off ? off : peak).push(run);
     }
-    return "Schedule (" + offsetLabel(offsetMin) + "): off-peak " + off.join(", ") +
+    var day = displayDayLabel(offsetMin, referenceMs);
+    if (peak.length === 0) {
+      return "Schedule (" + offsetLabel(offsetMin) + ", " + day + "): off-peak all day; peak none (weekend).";
+    }
+    return "Schedule (" + offsetLabel(offsetMin) + ", " + day + "): off-peak " + off.join(", ") +
       "; peak " + peak.join(", ") + ".";
   }
 
@@ -536,6 +587,7 @@
   var lastState = "";
   var lastNext = 0;
   var lastWindowKey = "";
+  var lastDisplayDayKey = "";
 
   function storeOffset(min) {
     try { window.localStorage.setItem(STORE_KEY, String(min)); } catch (e) { /* private mode */ }
@@ -576,13 +628,13 @@
   function humanSecs(ms) { return pad2(Math.floor(Math.max(0, ms) / 1000) % 60) + "s"; }
   function setText(el, txt) { if (el.textContent !== txt) el.textContent = txt; }
 
-  function buildStrip() {
+  function buildStrip(referenceMs) {
     var offset = getBaseOffset();
     var stale = strip.querySelectorAll(".seg");
     for (var k = 0; k < stale.length; k++) strip.removeChild(stale[k]);
     ticks.textContent = "";
     // Same segments the footer sentence describes, so the strip and the text agree.
-    var segs = displaySegments(offset);
+    var segs = displaySegments(offset, referenceMs);
     for (var i = 0; i < segs.length; i++) {
       var a = segs[i].start;
       var b = segs[i].end;
@@ -628,6 +680,12 @@
 
   function tick() {
     var now = Date.now();
+    var displayDayKey = String(displayDayStartMs(getBaseOffset(), now));
+    if (displayDayKey !== lastDisplayDayKey) {
+      lastDisplayDayKey = displayDayKey;
+      buildStrip(now);
+      updateLabels(now);
+    }
     var off = isOffPeak(now);
     var state = off ? "off" : "peak";
     if (state !== lastState) {
@@ -661,24 +719,26 @@
     }
   }
 
-  function updateLabels() {
+  function updateLabels(referenceMs) {
     var label = getBaseLabel();
     for (var i = 0; i < tzParens.length; i++) tzParens[i].textContent = "(" + label + ")";
     for (var j = 0; j < tzNames.length; j++) tzNames[j].textContent = label;
     setText(clockBaseLabel, label);
-    setText(scheduleNoteEl, scheduleNote(getBaseOffset()));
+    setText(scheduleNoteEl, scheduleNote(getBaseOffset(), referenceMs));
     document.title = relabel(TITLE_TEMPLATE, label);
     if (metaDesc) metaDesc.setAttribute("content", relabel(DESC_TEMPLATE, label));
   }
 
   function applyOffset(offsetMin, persist) {
+    var now = Date.now();
     setBaseOffset(offsetMin);
     tzSelect.value = String(getBaseOffset());
-    updateLabels();
-    buildStrip();
+    updateLabels(now);
+    buildStrip(now);
     lastState = "";
     lastNext = 0;
     lastWindowKey = "";
+    lastDisplayDayKey = String(displayDayStartMs(getBaseOffset(), now));
     tick();
     if (persist) storeOffset(getBaseOffset());
   }

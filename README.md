@@ -4,7 +4,7 @@ A single page that shows whether DeepSeek API pricing is off-peak right now, wit
 
 Check it [out](https://collaboration95.github.io/is-deepseek-off-peak/)
 
-Off-peak is 50% off peak rates. Times follow the timezone picker, which starts at UTC+8; UTC is shown alongside.
+Off-peak rates are half of peak rates. Peak pricing only applies Monday through Friday, during 01:00–04:00 and 06:00–10:00 UTC; Saturday and Sunday are fully off-peak. Times follow the timezone picker, which starts at UTC+8; UTC is shown alongside.
 
 ## Run it
 
@@ -23,21 +23,20 @@ The pick is remembered in `localStorage` per browser, and anything unrecognised 
 
 ## Schedule
 
-The schedule repeats every day, so it is the same in every timezone.
+The schedule is defined in UTC and changes by weekday. The timezone picker changes how the current day and switch times are displayed; it does not move the billing windows or turn weekend peak pricing on.
 
-| UTC+8 | UTC | Billing |
+| Days (UTC) | UTC | Billing |
 | --- | --- | --- |
-| 00:00-09:00 | 16:00-01:00 | Off-peak (50% off) |
-| 09:00-12:00 | 01:00-04:00 | Peak |
-| 12:00-14:00 | 04:00-06:00 | Off-peak (50% off) |
-| 14:00-18:00 | 06:00-10:00 | Peak |
-| 18:00-24:00 | 10:00-16:00 | Off-peak (50% off) |
+| Monday-Friday | 01:00-04:00 | Peak |
+| Monday-Friday | 06:00-10:00 | Peak |
+| Monday-Friday | 00:00-01:00, 04:00-06:00, 10:00-24:00 | Off-peak (50% off) |
+| Saturday-Sunday | 00:00-24:00 | Off-peak (50% off) |
 
-17 hours off-peak and 7 hours peak per day. Source: [DeepSeek API docs — Models & Pricing](https://api-docs.deepseek.com/quick_start/pricing/), effective 16 Aug 2026.
+Each weekday has 17 hours off-peak and 7 hours peak. Each weekend day has 24 hours off-peak, so a full week has 133 off-peak hours and 35 peak hours. Source: [DeepSeek API docs — Models & Pricing](https://api-docs.deepseek.com/quick_start/pricing/), effective 16 Aug 2026.
 
 ## Layout
 
-The page fits one screen: three bands in a viewport-height grid, with every vertical measure tied to viewport height so a short window compresses it rather than pushing content below the fold. Below 860px wide the two panels fuse into one card and the lede drops; on a short phone the headings, legend and captions around the strip stand down.
+The page fits one screen: three bands in a viewport-height grid, with every vertical measure tied to viewport height so a short window compresses it rather than pushing content below the fold. Below 860px wide the two panels fuse into one card and the lede drops; on a short phone the headings, legend and captions around the strip stand down. The day strip and schedule sentence follow the selected local calendar day, including an all-off-peak weekend.
 
 The dot beside the eyebrow pulses while the page is open: an expanding halo that fades, tinted with the current state colour, so it reads as a live indicator. It stands still under `prefers-reduced-motion`.
 
@@ -45,4 +44,4 @@ The dot beside the eyebrow pulses while the page is open: an expanding halo that
 
     node verify.mjs
 
-Runs ~388k assertions that re-derive the schedule independently of the page code: every second of a UTC day, every boundary instant, a full month minute by minute, the billing windows behind the progress bar, the picker's offsets and their labels, and a sweep over every offered offset that checks the clocks, day strip and footer text against the UTC schedule. Results are identical under any host timezone.
+Runs an independent schedule model across weekday and weekend boundaries, a full month minute by minute, the long Friday-to-Monday off-peak window behind the progress bar, the picker's offsets and labels, and a sweep over every offered offset that checks clocks, the day strip and footer text against the UTC schedule. Results are identical under any host timezone.
